@@ -120,11 +120,12 @@ module "kms_main" {
 
 # Deploy the Google Secret Manager(GSM) using the Secret Manager module
 module "gsm_iac" {
-  source      = "../../modules/gcp/secret-manager"
-  region      = var.region
-  name        = local.gsm_naming_standard
-  standard    = local.gsm_standard
-  secret_data = data.google_kms_secret.iac_secrets
+  source    = "../../modules/gcp/secret-manager"
+  region    = var.region
+  standard  = local.gsm_standard
+  name      = local.gsm_naming_standard
+  ## Decrypt the secrets using the KMS key
+  secret_data = local.iac_secrets_json
 }
 
 module "dns_main" {

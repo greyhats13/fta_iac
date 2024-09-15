@@ -1,13 +1,13 @@
-# Google Secret Manager Module for Google Cloud Platform (GCP)
+# Google Secret Manager Module for Terraform
 
-This Terraform module manages the creation and management of secrets in Google Secret Manager. It allows you to store, manage, and access secrets securely within your GCP environment.
+This Terraform module manages secrets and their versions in Google Cloud Secret Manager. It allows you to create secrets with custom labels and annotations, specify replication settings, and add secret versions with the secret data.
 
 ## Features
 
-- **Secret Creation**: Creates one or multiple secrets in Google Secret Manager.
-- **Secret Versions**: Adds secret versions with provided secret data.
-- **Labels and Annotations**: Applies labels and annotations for better organization and management.
-- **User-Managed Replication**: Supports specifying the replication location of secrets.
+- **Secret Creation**: Creates a new secret in Google Secret Manager with specified labels and annotations.
+- **User-Managed Replication**: Supports user-managed replication by specifying the regions where the secret is replicated.
+- **Secret Version Creation**: Adds a new version to the secret with the provided secret data.
+- **Custom Labels and Annotations**: Applies custom labels and annotations based on a standard naming convention.
 
 ## Usage
 
@@ -15,47 +15,44 @@ This Terraform module manages the creation and management of secrets in Google S
 module "secret_manager" {
   source = "<path_to_module_directory>"
 
-  region  = "us-central1"
-  name    = "my-secret"
-  standard = {
-    Unit = "my-unit"
-    Env  = "production"
-    Code = "my-code"
-  }
+  region      = "us-central1"
+  name        = "my-secret-name"
+  secret_data = "my-secret-data"
 
-  secret_data = {
-    "db_password" = "my_db_password"
-    "api_key"     = "my_api_key"
+  standard = {
+    Unit    = "my-unit"
+    Env     = "prod"
+    Code    = "my-code"
+    Feature = "my-feature"
   }
 }
 ```
 
 ## Inputs
 
-| Name          | Description                                            | Type          | Default | Required |
-|---------------|--------------------------------------------------------|---------------|---------|:--------:|
-| `region`      | GCP region where the secrets will be stored.           | `string`      | n/a     |   yes    |
-| `name`        | The base name for the secrets.                         | `string`      | n/a     |   yes    |
-| `standard`    | A map containing standard naming conventions.          | `map(string)` | n/a     |   yes    |
-| `secret_data` | A map of secrets to be stored in Secret Manager. Keys are secret IDs, and values are secret data. | `map` | n/a | yes |
+| Name          | Description                                                                                                        | Type          | Default | Required |
+|---------------|--------------------------------------------------------------------------------------------------------------------|---------------|---------|:--------:|
+| `region`      | The GCP region where the secret will be replicated.                                                                | `string`      | n/a     |   yes    |
+| `name`        | The name of the secret.                                                                                            | `string`      | n/a     |   yes    |
+| `standard`    | A map containing standard naming convention values for resources (e.g., Unit, Env, Code, Feature).                 | `map(string)` | n/a     |   yes    |
+| `secret_data` | The secret data in plaintext to be stored in the secret manager. It can be a JSON object or a string.              | `string`      | n/a     |   yes    |
 
-### `standard` Map Details
+### `standard` Map Keys
 
 The `standard` map should include the following keys:
 
-- `Unit`: The unit or department name.
-- `Env`: The environment (e.g., `dev`, `staging`, `production`).
-- `Code`: A code representing the project or application.
+- `Unit` (string): The unit or department name.
+- `Env` (string): The environment (e.g., `dev`, `staging`, `prod`).
+- `Code` (string): A code representing the project or application.
+- `Feature` (string): The feature name associated with the secret.
 
 ## Outputs
 
-| Name                   | Description                                         |
-|------------------------|-----------------------------------------------------|
-| `secret_id`            | A map of secret IDs created in Secret Manager.      |
-| `secret_version_id`    | A map of secret version IDs associated with secrets.|
-| `secret_version_data`  | A map of the secret data (sensitive).               |
-
-**Note**: The `secret_version_data` output is marked as sensitive and will not be displayed in plaintext in Terraform output.
+| Name                    | Description                                        |
+|-------------------------|----------------------------------------------------|
+| `secret_id`             | The resource ID of the created secret.             |
+| `secret_version_id`     | The resource ID of the created secret version.     |
+| `secret_version_data`   | The version number of the secret (marked sensitive). |
 
 ## Example
 
@@ -63,28 +60,28 @@ The `standard` map should include the following keys:
 module "secret_manager" {
   source = "./modules/secret_manager"
 
-  region  = "us-central1"
-  name    = "app-secrets"
-  standard = {
-    Unit = "finance"
-    Env  = "production"
-    Code = "fin-app"
-  }
+  region      = "us-central1"
+  name        = "db-credentials"
+  secret_data = jsonencode({
+    username = "db-user"
+    password = "db-pass"
+  })
 
-  secret_data = {
-    "db_password" = "supersecretpassword"
-    "api_key"     = "abcdef1234567890"
-    "smtp_pass"   = "smtppassword"
+  standard = {
+    Unit    = "fta"
+    Env     = "mstr"
+    Code    = "gsm"
+    Feature = "iac"
   }
 }
 ```
 
 ## Notes
 
-- **Secret Data**: The `secret_data` variable accepts a map where the key is the `secret_id` and the value is the secret content. You can also provide a map with a `plaintext` key if additional attributes are needed.
-- **Labels and Annotations**: Labels and annotations are applied to each secret for organizational purposes, using values from the `standard` map and other variables.
-- **Replication**: This module uses user-managed replication to specify the location where the secret is stored. Update the `replication` block if you need different replication settings.
-- **Sensitive Outputs**: Be cautious with sensitive outputs. Although Terraform masks sensitive output values, ensure that you handle them securely in your code and logs.
+- **Secret Data Format**: The `secret_data` can be a plain string or a JSON-encoded string. If you're storing structured data, consider encoding it using `jsonencode`.
+- **Labels and Annotations**: Labels and annotations are applied to the secret resource using the values provided in the `standard` map and the `name` variable.
+- **Replication**: The module uses user-managed replication to replicate the secret in the specified `region`.
+- **Permissions**: Ensure that the Terraform service account has the necessary permissions to create secrets and secret versions in Google Cloud Secret Manager.
 
 ## Requirements
 
@@ -93,67 +90,66 @@ module "secret_manager" {
 
 ## Resources Created
 
-- **google_secret_manager_secret**: Creates secrets in Google Secret Manager.
-- **google_secret_manager_secret_version**: Adds secret versions containing the secret data.
+- **google_secret_manager_secret**: The secret resource in Google Secret Manager.
+- **google_secret_manager_secret_version**: The secret version resource containing the secret data.
 
 ## Input Details
 
 ### `region`
 
-- **Description**: The GCP region where the secrets will be stored.
+- **Description**: The GCP region where the secret will be replicated.
 - **Type**: `string`
 - **Required**: Yes
 
 ### `name`
 
-- **Description**: The base name for the secrets.
+- **Description**: The name of the secret.
 - **Type**: `string`
 - **Required**: Yes
 
 ### `standard`
 
-- **Description**: A map containing standard naming conventions for resources.
+- **Description**: A map containing standard naming convention values for resources.
 - **Type**: `map(string)`
 - **Required**: Yes
 - **Keys**:
-  - `Unit`: Unit or department name.
-  - `Env`: Environment name.
-  - `Code`: Project or application code.
+  - `Unit`: The unit or department name.
+  - `Env`: The environment (e.g., `dev`, `staging`, `prod`).
+  - `Code`: A code representing the project or application.
+  - `Feature`: The feature name associated with the secret.
 
 ### `secret_data`
 
-- **Description**: A map of secrets to be stored in Secret Manager.
-- **Type**: `map`
+- **Description**: The secret data in plaintext to be stored. It could be a JSON object or a string.
+- **Type**: `string`
 - **Required**: Yes
-- **Example**:
-  ```hcl
-  secret_data = {
-    "db_password" = "my_db_password"
-    "api_key"     = "my_api_key"
-  }
-  ```
 
 ## Output Details
 
 ### `secret_id`
 
-- **Description**: A map where each key is the secret ID and the value is the resource ID of the secret in Secret Manager.
-- **Type**: `map(string)`
+- **Description**: The resource ID of the created secret.
+- **Type**: `string`
 
 ### `secret_version_id`
 
-- **Description**: A map where each key is the secret ID and the value is the resource ID of the secret version.
-- **Type**: `map(string)`
+- **Description**: The resource ID of the created secret version.
+- **Type**: `string`
 
 ### `secret_version_data`
 
-- **Description**: A map where each key is the secret ID and the value is the secret data. This output is sensitive.
-- **Type**: `map(string)`
-- **Sensitive**: Yes
+- **Description**: The version number of the secret. This output is marked as sensitive.
+- **Type**: `string`
+
+## Troubleshooting
+
+- **Authentication Errors**: Ensure that your Terraform execution environment has the necessary permissions to create and manage secrets in Google Cloud Secret Manager.
+- **Invalid Labels or Annotations**: Verify that the values provided in the `standard` map adhere to label and annotation requirements in Google Cloud.
+- **Secret Data Size**: Be aware of any size limitations for secret data in Google Secret Manager.
 
 ## References
 
-- [Google Secret Manager Documentation](https://cloud.google.com/secret-manager/docs)
+- [Google Cloud Secret Manager Documentation](https://cloud.google.com/secret-manager/docs)
 - [Terraform Google Provider - google_secret_manager_secret](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret)
 - [Terraform Google Provider - google_secret_manager_secret_version](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret_version)
 

@@ -1,12 +1,11 @@
 resource "google_secret_manager_secret" "secret" {
-  for_each  = var.secret_data
-  secret_id = each.key
+  secret_id = var.standard.Feature
 
   labels = {
     "unit"    = var.standard.Unit
     "env"     = var.standard.Env
     "code"    = var.standard.Code
-    "feature" = each.key
+    "feature" = var.standard.Feature
     "name"    = var.name
   }
 
@@ -22,12 +21,12 @@ resource "google_secret_manager_secret" "secret" {
     "unit"    = var.standard.Unit
     "env"     = var.standard.Env
     "code"    = var.standard.Code
+    "feature" = var.standard.Feature
     "name"    = var.name
   }
 }
 
 resource "google_secret_manager_secret_version" "secret_version" {
-  for_each    = var.secret_data
-  secret      = google_secret_manager_secret.secret[each.key].id
-  secret_data = try(each.value.plaintext, each.value)
+  secret      = google_secret_manager_secret.secret.id
+  secret_data = var.secret_data
 }

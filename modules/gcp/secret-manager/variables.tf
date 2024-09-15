@@ -16,5 +16,5 @@ variable "standard" {
 
 # Google Secret Manager arguments
 variable "secret_data" {
-  description = "The secrets to be stored in the secret manager"
+  description = "The secrets data in plaintext to be stored in the secret manager. It could be a JSON object or a string."
 }
