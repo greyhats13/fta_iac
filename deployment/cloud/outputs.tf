@@ -1,3 +1,19 @@
+# Outputs for the GCS Deployment
+output "bucket_name" {
+  value       = module.gcs_tfstate.bucket_name
+  description = "The name of the created Google Cloud Storage bucket."
+}
+
+output "bucket_url" {
+  value       = module.gcs_tfstate.bucket_url
+  description = "The URL of the created Google Cloud Storage bucket."
+}
+
+output "bucket_self_link" {
+  value       = module.gcs_tfstate.bucket_self_link
+  description = "The self link of the created Google Cloud Storage bucket, useful for referencing the bucket in other resources within the same project."
+}
+
 # Outputs for the VPC Deployment
 
 # VPC Outputs
@@ -63,4 +79,21 @@ output "main_firewall_ids" {
 output "main_firewall_self_links" {
   value       = module.vpc_main.firewall_self_links
   description = "The URI of the firewall rule"
+}
+
+# Outputs for the KMS Deployment
+output "security_keyring_id" {
+  value = module.kms_main.keyring_id
+}
+
+output "security_cryptokey_id" {
+  value = module.kms_main.cryptokey_id
+}
+
+output "security_service_account_id" {
+  value = module.kms_main.service_account_id
+}
+
+output "security_service_account_email" {
+  value = module.kms_main.service_account_email
 }

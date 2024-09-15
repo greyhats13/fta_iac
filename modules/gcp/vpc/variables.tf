@@ -4,9 +4,9 @@ variable "region" {
   description = "The GCP region where resources will be created."
 }
 
-variable "standard" {
-  type = map(string)
-  description = "The standard naming convention for resources."
+variable "name" {
+  type        = string
+  description = "The name of the VPC."
 }
 
 variable "auto_create_subnetworks" {

@@ -1,3 +1,12 @@
+# Backend configuration
+terraform {
+  backend "gcs" {
+    bucket = "fta-mstr-gcs-tfstate"
+    prefix = "fta/cloud/deployment"
+  }
+}
+
+# Retrieve the current project
 data "google_project" "curent" {}
 
 module "gcp_project" {
@@ -5,28 +14,50 @@ module "gcp_project" {
   project_id = data.google_project.curent.project_id
   services = {
     # resource_manager = "cloudresourcemanager.googleapis.com",
-    iam              = "iam.googleapis.com",
-    gcs              = "storage.googleapis.com"
-    cloud_dns        = "dns.googleapis.com",
-    gce              = "compute.googleapis.com",
-    gke              = "container.googleapis.com",
-    secret_manager   = "secretmanager.googleapis.com",
-    kms              = "cloudkms.googleapis.com",
+    iam            = "iam.googleapis.com",
+    gcs            = "storage.googleapis.com"
+    cloud_dns      = "dns.googleapis.com",
+    gce            = "compute.googleapis.com",
+    gke            = "container.googleapis.com",
+    secret_manager = "secretmanager.googleapis.com",
+    kms            = "cloudkms.googleapis.com",
   }
+}
+
+
+# Create a Google Cloud Storage bucket for storing Terraform state
+module "gcs_tfstate" {
+  source                   = "../../modules/gcp/gcs"
+  region                   = var.region
+  name                     = local.gcs_naming_standard
+  force_destroy            = true
+  public_access_prevention = "enforced"
+}
+
+# Deploy the KMS using the KMS module
+module "kms_main" {
+  source                               = "../../modules/gcp/kms"
+  name                                 = local.kms_naming_standard
+  region                               = var.region
+  project_id                           = data.google_project.curent.project_id
+  keyring_location                     = "global"
+  cryptokey_rotation_period            = "2592000s"
+  cryptokey_destroy_scheduled_duration = "86400s"
+  cryptokey_purpose                    = "ENCRYPT_DECRYPT"
+  cryptokey_version_template = {
+    algorithm        = "GOOGLE_SYMMETRIC_ENCRYPTION"
+    protection_level = "SOFTWARE"
+  }
+  cryptokey_role = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
 }
 
 # Deploy the VPC using the VPC module
 module "vpc_main" {
-  source = "../../modules/gcp/vpc"
-  region = var.region
-  standard = {
-    unit    = var.unit
-    env     = var.env
-    code    = "net"
-    feature = "vpc"
-  }
+  source                  = "../../modules/gcp/vpc"
+  region                  = var.region
+  name                    = local.vpc_naming_standard
   auto_create_subnetworks = false
-  ip_cidr_range = "10.0.0.0/16"
+  ip_cidr_range           = "10.0.0.0/16"
   secondary_ip_range = [
     {
       range_name    = "pods-range"
@@ -51,7 +82,7 @@ module "vpc_main" {
         }
       ]
       source_ranges = ["0.0.0.0/0"]
-      priority = 65534
+      priority      = 65534
     }
     internal = {
       name        = "allow-internal"
@@ -73,7 +104,7 @@ module "vpc_main" {
       ]
       # source ranges based on the environment
       source_ranges = ["10.0.0.0/16"]
-      priority = 65534
+      priority      = 65534
     }
     ssh = {
       name        = "allow-ssh"
@@ -86,7 +117,7 @@ module "vpc_main" {
         }
       ]
       source_ranges = ["0.0.0.0/0"]
-      priority = 65534
+      priority      = 65534
     }
     rdp = {
       name        = "allow-rdp"
@@ -99,8 +130,8 @@ module "vpc_main" {
         }
       ]
       source_ranges = ["0.0.0.0/0"]
-      priority = 65534
+      priority      = 65534
     }
   }
-  depends_on = [ module.gcp_project ]
+  depends_on = [module.gcp_project]
 }
