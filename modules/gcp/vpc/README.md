@@ -216,7 +216,7 @@ module "vpc" {
 
 ## Author
 
-- Imam Arief Rahman ([@greyhats13](
+- Imam Arief Rahman ([@greyhats13])
 
 ---
 
