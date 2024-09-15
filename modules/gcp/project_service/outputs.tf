@@ -1,4 +1,4 @@
 output "project_service_id" {
-  value       = google_project_service.project.id
+  value       = { for service in google_project_service.project : service.id => service.service }
   description = "The ID of the project service"
 }

@@ -6,6 +6,78 @@ terraform {
   }
 }
 
+# module "github_repository" {
+#   source                 = "../../modules/cicd/repository"
+#   env                    = var.env
+#   repository_name        = "${var.unit}_${var.feature}"
+#   repository_readme      = "This is the repository for ${var.unit}_${var.feature}"
+#   visibility             = "public"
+#   has_issues             = true
+#   has_discussions        = true
+#   has_projects           = true
+#   has_wiki               = true
+#   delete_branch_on_merge = true
+#   auto_init              = true
+#   gitignore_template     = "Terraform"
+#   license_template       = "apache-2.0"
+#   security_and_analysis = {
+#     advanced_security = {
+#       status = "enabled"
+#     }
+#     secret_scanning = {
+#       status = "enabled"
+#     }
+#     secret_scanning_push_protection = {
+#       status = "enabled"
+#     }
+#   }
+#   topics               = ["terraform", "iac", "devops", "gcp", "argocd", "kubernetes"]
+#   vulnerability_alerts = true
+#   # list_of_protect_branch = ["main", "dev", "stg"]
+#   # enforce_admins         = false
+#   # required_pull_request_reviews = {
+#   #   require_code_owner_reviews      = false
+#   #   required_approving_review_count = 1
+#   #   bypass_pull_request_allowances = {
+#   #     users = ["greyhats13"]
+#   #     teams = ["devops"]
+#   #     apps  = ["github-actions"]
+#   #   }
+#   # }
+#   # restrictions = {
+#   #   users = ["greyhats13"]
+#   #   teams = ["devops"]
+#   #   apps  = ["github-actions"]
+#   # }
+#   webhooks = {
+#     atlantis = {
+#       configuration = {
+#         url          = "https://atlantis.fta.blast.co.id/events"
+#         content_type = "json"
+#         insecure_ssl = false
+#         secret       = data.google_kms_secret.github_secret.plaintext
+#       }
+#       active = true
+#       events = ["push", "pull_request", "pull_request_review", "issue_comment"]
+#     }
+#     argocd = {
+#       configuration = {
+#         url          = "https://argocd.fta.blast.co.id/api/webhook"
+#         content_type = "json"
+#         insecure_ssl = false
+#         secret       = data.google_kms_secret.github_secret.plaintext
+#       }
+#       active = true
+#       events = ["push"]
+#     }
+#   }
+#   teams_permission = {
+#     technology = "pull"
+#     devops     = "triage"
+#   }
+# }
+
+
 # Retrieve the current project
 data "google_project" "curent" {}
 
@@ -48,6 +120,15 @@ module "kms_main" {
     protection_level = "SOFTWARE"
   }
   cryptokey_role = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+}
+
+module "dns_main" {
+  source        = "../../modules/gcp/dns"
+  region        = var.region
+  name          = local.dns_naming_standard
+  dns_name      = "${var.unit}.blast.co.id."
+  force_destroy = true
+  visibility    = "public"
 }
 
 # Deploy the VPC using the VPC module

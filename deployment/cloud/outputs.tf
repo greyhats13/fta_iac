@@ -97,3 +97,29 @@ output "security_service_account_id" {
 output "security_service_account_email" {
   value = module.kms_main.service_account_email
 }
+
+# Outputs for the DNS Deploymen
+# FTA zone
+output "main_dns_id" {
+  value = module.dns_main.dns_id
+}
+
+output "main_dns_zone_name" {
+  value = module.dns_main.dns_zone_name
+}
+
+output "main_dns_name" {
+  value = module.dns_main.dns_name
+}
+
+output "main_dns_managed_zone_id" {
+  value = module.dns_main.dns_managed_zone_id
+}
+
+output "main_dns_name_servers" {
+  value = module.dns_main.dns_name_servers
+}
+
+output "main_dns_zone_visibility" {
+  value = module.dns_main.dns_zone_visibility
+}

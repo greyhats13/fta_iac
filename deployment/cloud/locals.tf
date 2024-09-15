@@ -23,5 +23,13 @@ locals {
     Feature = "main"
   }
   kms_naming_standard = "${local.kms_standard.Unit}-${local.kms_standard.Env}-${local.kms_standard.Code}-${local.kms_standard.Feature}"
+  # DNS Standard
+  dns_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "dns"
+    Feature = "main"
+  }
+  dns_naming_standard = "${local.dns_standard.Unit}-${local.dns_standard.Env}-${local.dns_standard.Code}-${local.dns_standard.Feature}"
 }
 
