@@ -31,5 +31,13 @@ locals {
     Feature = "main"
   }
   dns_naming_standard = "${local.dns_standard.Unit}-${local.dns_standard.Env}-${local.dns_standard.Code}-${local.dns_standard.Feature}"
+  # Secret Manager Standard
+  gsm_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "gsm"
+    Feature = "iac"
+  }
+  gsm_naming_standard = "${local.gsm_standard.Unit}-${local.gsm_standard.Env}-${local.gsm_standard.Code}-${local.gsm_standard.Feature}"
 }
 

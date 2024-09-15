@@ -77,10 +77,6 @@ terraform {
 #   }
 # }
 
-
-# Retrieve the current project
-data "google_project" "curent" {}
-
 module "gcp_project" {
   source     = "../../modules/gcp/project-service"
   project_id = data.google_project.curent.project_id
@@ -120,6 +116,15 @@ module "kms_main" {
     protection_level = "SOFTWARE"
   }
   cryptokey_role = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+}
+
+# Deploy the Google Secret Manager(GSM) using the Secret Manager module
+module "gsm_iac" {
+  source      = "../../modules/gcp/secret-manager"
+  region      = var.region
+  name        = local.gsm_naming_standard
+  standard    = local.gsm_standard
+  secret_data = data.google_kms_secret.iac_secrets
 }
 
 module "dns_main" {
