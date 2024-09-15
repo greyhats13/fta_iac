@@ -216,10 +216,6 @@ module "vpc" {
 
 ## Author
 
-- Imam Arief Rahman ([@greyhats13])
+- **Imam Arief Rahman* - [greyhats13](https://github.com/greyhats13)
 
 ---
-
-If you have any questions or need further assistance, feel free to ask!
-
-```

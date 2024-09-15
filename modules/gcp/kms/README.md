@@ -102,6 +102,6 @@ module "kms" {
 
 ## Author
 
-- Imam Arief Rahman ([@greyhats13])
+- **Imam Arief Rahman* - [greyhats13](https://github.com/greyhats13)
 
 ---
