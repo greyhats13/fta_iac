@@ -82,7 +82,7 @@ terraform {
 data "google_project" "curent" {}
 
 module "gcp_project" {
-  source     = "../../modules/gcp/project_service"
+  source     = "../../modules/gcp/project-service"
   project_id = data.google_project.curent.project_id
   services = {
     # resource_manager = "cloudresourcemanager.googleapis.com",
@@ -182,7 +182,6 @@ module "vpc_main" {
           ports    = []
         }
       ]
-      # source ranges based on the environment
       source_ranges = ["10.0.0.0/16"]
       priority      = 65534
     }
