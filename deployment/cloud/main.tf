@@ -24,7 +24,6 @@ module "gcp_project" {
   }
 }
 
-
 # Create a Google Cloud Storage bucket for storing Terraform state
 module "gcs_tfstate" {
   source                   = "../../modules/gcp/gcs"
