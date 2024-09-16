@@ -1,12 +1,18 @@
-# # Create kubectl provider
-# terraform {
-#   required_providers {
-#     kubectl = {
-#       source  = "alon-dotan-starkware/kubectl"
-#       version = "1.11.2"
-#     }
-#   }
-# }
+terraform {
+  required_providers {
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
+    }
+    # kubectl = {
+    #   source  = "alon-dotan-starkware/kubectl"
+    #   version = "1.11.2"
+    # }
+  }
+}
+
+# Configure the GitHub Provider
+provider "github" {}
 
 # Configure the Google Cloud provider for Terraform
 provider "google" {

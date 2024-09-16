@@ -34,7 +34,7 @@ locals {
     Feature = "main"
   }
   dns_naming_standard = "${local.dns_standard.Unit}-${local.dns_standard.Env}-${local.dns_standard.Code}-${local.dns_standard.Feature}"
-  
+
   # Secret Manager Standard
   gsm_standard = {
     Unit    = var.unit
@@ -46,5 +46,23 @@ locals {
 
   ## JSON encode the secret in plaintext
   iac_secrets_json = jsonencode({for k,v in data.google_kms_secret.iac_secrets : k => v.plaintext})
-}
+  ## Decode the secrets in plaintext
+  iac_secrets_map = jsondecode(module.gsm_iac.secret_version_data)
 
+  # Github Repository Standard
+  ## Repository for fta_iac
+  repo_iac_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "repo"
+    Feature = "iac"
+  }
+  
+  ## Repository for fta_helm
+  repo_helm_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "repo"
+    Feature = "helm"
+  }
+}

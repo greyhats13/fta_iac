@@ -7,3 +7,8 @@ data "google_kms_secret" "iac_secrets" {
   crypto_key = module.kms_main.cryptokey_id
   ciphertext = each.value
 }
+
+# # Get IAC secrets value from the Secret Manager
+# data "google_secret_manager_secret_version" "iac" {
+#   secret = "iac"
+# }

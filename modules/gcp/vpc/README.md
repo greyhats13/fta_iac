@@ -1,6 +1,3 @@
-Sure, based on your Terraform code for the VPC module, here is the `README.md` in English:
-
-```markdown
 # VPC Module for Google Cloud Platform (GCP)
 
 This Terraform module provisions a Virtual Private Cloud (VPC) on GCP, along with associated resources like subnetworks, routers, Cloud NAT, and firewall rules.

@@ -64,7 +64,7 @@ variable "delete_branch_on_merge" {
 variable "has_downloads" {
   type        = bool
   description = "Set to true to enable the GitHub Downloads features on the repository."
-  default     = false
+  default     = true
 }
 
 variable "auto_init" {
@@ -254,6 +254,7 @@ variable "webhooks" {
 variable "teams_permission" {
   type        = map(string)
   description = "List of teams permission to be added to the repository"
+  default     = {}
 }
 
 # Github deploy key arguments

@@ -6,10 +6,10 @@ locals {
   } : {}
 }
 
-resource "github_repository" "repository" {
+resource "github_repository" "repo" {
   count                  = local.create_repository
   name                   = local.naming_standard
-  description            = "This is the repository for ${local.naming_standard}"
+  # description            = "This is the repository for ${local.naming_standard}"
   homepage_url           = var.homepage_url
   visibility             = var.visibility
   has_issues             = var.has_issues
@@ -77,22 +77,15 @@ resource "github_repository" "repository" {
 
 locals {
   create_dev_branch = var.standard.Env == "dev" || var.standard.Env == "mstr" ? 1 : 0
-  create_stg_branch = (var.standard.Env == "dev" || var.standard.Env == "mstr") && (github_repository.repository[0].name == "ols_iac" || github_repository.repository[0].name == "ols_helm") ? 1 : 0
+  create_stg_branch = (var.standard.Env == "dev" || var.standard.Env == "mstr") && (github_repository.repo[0].name == "ols_iac" || github_repository.repo[0].name == "ols_helm") ? 1 : 0
 }
 
 resource "github_branch" "dev" {
   count         = local.create_dev_branch
-  repository    = github_repository.repository[0].name
+  repository    = github_repository.repo[0].name
   branch        = var.standard.Env == "mstr" ? "dev" : var.standard.Env
   source_branch = var.default_branch
 }
-
-# resource "github_branch" "stg" {
-#   count         = local.create_stg_branch
-#   repository    = github_repository.repository[0].name
-#   branch        = "stg"
-#   source_branch = var.default_branch
-# }
 
 locals {
   enable_auto_link = var.key_prefix != null ? 1 : 0
@@ -100,7 +93,7 @@ locals {
 
 resource "github_repository_autolink_reference" "autolink" {
   count               = local.enable_auto_link
-  repository          = github_repository.repository[count.index].name
+  repository          = github_repository.repo[count.index].name
   key_prefix          = var.key_prefix
   target_url_template = var.target_url_template
   is_alphanumeric     = var.is_alphanumeric
@@ -112,7 +105,7 @@ locals {
 
 resource "github_branch_protection_v3" "branch_protectionv3" {
   count          = local.create_branch_protection
-  repository     = github_repository.repository[0].name
+  repository     = github_repository.repo[0].name
   branch         = var.list_of_protect_branch[count.index]
   enforce_admins = var.enforce_admins
   dynamic "required_status_checks" {
@@ -152,7 +145,7 @@ resource "github_branch_protection_v3" "branch_protectionv3" {
 
 resource "github_repository_webhook" "webhooks" {
   for_each   = length(var.webhooks) > 0 ? var.webhooks : {}
-  repository = github_repository.repository[0].name
+  repository = github_repository.repo[0].name
 
   dynamic "configuration" {
     for_each = each.value.configuration != null ? [each.value.configuration] : []
@@ -172,14 +165,14 @@ resource "github_repository_webhook" "webhooks" {
 resource "github_team_repository" "team_repo" {
   for_each   = length(var.teams_permission) > 0 ? var.teams_permission : {}
   team_id    = each.key
-  repository = github_repository.repository[0].name
+  repository = github_repository.repo[0].name
   permission = each.value
 }
 
 resource "github_repository_deploy_key" "repository_deploy_key" {
   count      = var.public_key != null ? 1 : 0
-  title      = "${github_repository.repository[count.index].name}-public-key"
-  repository = github_repository.repository[count.index].name
+  title      = "${github_repository.repo[count.index].name}-public-key"
+  repository = github_repository.repo[count.index].name
   key        = var.public_key
   read_only  = var.is_deploy_key_read_only
 }
@@ -187,7 +180,7 @@ resource "github_repository_deploy_key" "repository_deploy_key" {
 resource "kubernetes_secret_v1" "argocd" {
   count = var.argocd_namespace != null && var.ssh_key != null ? 1 : 0
   metadata {
-    name      = replace(github_repository.repository[count.index].name, "_", "-")
+    name      = replace(github_repository.repo[count.index].name, "_", "-")
     namespace = var.argocd_namespace
     labels = {
       "argocd.argoproj.io/secret-type" = "repository"
@@ -196,20 +189,20 @@ resource "kubernetes_secret_v1" "argocd" {
 
   data = {
     type          = "git"
-    url           = github_repository.repository[count.index].ssh_clone_url
+    url           = github_repository.repo[count.index].ssh_clone_url
     sshPrivateKey = var.ssh_key
   }
 }
 
 resource "github_repository_environment" "environment" {
   count       = length(var.github_action_secrets) > 0 ? 1 : 0
-  environment = "${github_repository.repository[count.index].name}_${var.standard.Env}"
-  repository  = github_repository.repository[count.index].name
+  environment = "${github_repository.repo[count.index].name}_${var.standard.Env}"
+  repository  = github_repository.repo[count.index].name
 }
 
 resource "github_actions_environment_secret" "secret" {
   for_each        = var.github_action_secrets
-  repository      = github_repository.repository[0].name
+  repository      = github_repository.repo[0].name
   environment     = github_repository_environment.environment[0].environment
   secret_name     = each.key
   plaintext_value = try(each.value.plaintext, each.value)

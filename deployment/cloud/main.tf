@@ -6,77 +6,6 @@ terraform {
   }
 }
 
-# module "github_repository" {
-#   source                 = "../../modules/cicd/repository"
-#   env                    = var.env
-#   repository_name        = "${var.unit}_${var.feature}"
-#   repository_readme      = "This is the repository for ${var.unit}_${var.feature}"
-#   visibility             = "public"
-#   has_issues             = true
-#   has_discussions        = true
-#   has_projects           = true
-#   has_wiki               = true
-#   delete_branch_on_merge = true
-#   auto_init              = true
-#   gitignore_template     = "Terraform"
-#   license_template       = "apache-2.0"
-#   security_and_analysis = {
-#     advanced_security = {
-#       status = "enabled"
-#     }
-#     secret_scanning = {
-#       status = "enabled"
-#     }
-#     secret_scanning_push_protection = {
-#       status = "enabled"
-#     }
-#   }
-#   topics               = ["terraform", "iac", "devops", "gcp", "argocd", "kubernetes"]
-#   vulnerability_alerts = true
-#   # list_of_protect_branch = ["main", "dev", "stg"]
-#   # enforce_admins         = false
-#   # required_pull_request_reviews = {
-#   #   require_code_owner_reviews      = false
-#   #   required_approving_review_count = 1
-#   #   bypass_pull_request_allowances = {
-#   #     users = ["greyhats13"]
-#   #     teams = ["devops"]
-#   #     apps  = ["github-actions"]
-#   #   }
-#   # }
-#   # restrictions = {
-#   #   users = ["greyhats13"]
-#   #   teams = ["devops"]
-#   #   apps  = ["github-actions"]
-#   # }
-#   webhooks = {
-#     atlantis = {
-#       configuration = {
-#         url          = "https://atlantis.fta.blast.co.id/events"
-#         content_type = "json"
-#         insecure_ssl = false
-#         secret       = data.google_kms_secret.github_secret.plaintext
-#       }
-#       active = true
-#       events = ["push", "pull_request", "pull_request_review", "issue_comment"]
-#     }
-#     argocd = {
-#       configuration = {
-#         url          = "https://argocd.fta.blast.co.id/api/webhook"
-#         content_type = "json"
-#         insecure_ssl = false
-#         secret       = data.google_kms_secret.github_secret.plaintext
-#       }
-#       active = true
-#       events = ["push"]
-#     }
-#   }
-#   teams_permission = {
-#     technology = "pull"
-#     devops     = "triage"
-#   }
-# }
-
 module "gcp_project" {
   source     = "../../modules/gcp/project-service"
   project_id = data.google_project.curent.project_id
@@ -92,7 +21,7 @@ module "gcp_project" {
   }
 }
 
-# Create a Google Cloud Storage bucket for storing Terraform state
+# Provisioning a Google Cloud Storage bucket for storing Terraform state
 module "gcs_tfstate" {
   source                   = "../../modules/gcp/gcs"
   region                   = var.region
@@ -101,7 +30,7 @@ module "gcs_tfstate" {
   public_access_prevention = "enforced"
 }
 
-# Deploy the KMS using the KMS module
+# Provisioning the KMS using the KMS module
 module "kms_main" {
   source                               = "../../modules/gcp/kms"
   name                                 = local.kms_naming_standard
@@ -120,12 +49,53 @@ module "kms_main" {
 
 # Deploy the Google Secret Manager(GSM) using the Secret Manager module
 module "gsm_iac" {
-  source    = "../../modules/gcp/secret-manager"
-  region    = var.region
-  standard  = local.gsm_standard
-  name      = local.gsm_naming_standard
+  source   = "../../modules/gcp/secret-manager"
+  region   = var.region
+  standard = local.gsm_standard
+  name     = local.gsm_naming_standard
   ## Decrypt the secrets using the KMS key
   secret_data = local.iac_secrets_json
+}
+
+
+# Provision the GitHub repository for the fta_iac
+module "repo_iac" {
+  source                 = "../../modules/cicd/github_repo"
+  standard               = local.repo_iac_standard
+  visibility             = "public"
+  has_issues             = true
+  has_discussions        = true
+  has_projects           = true
+  has_wiki               = true
+  delete_branch_on_merge = true
+  auto_init              = false
+  gitignore_template     = "Terraform"
+  license_template       = "apache-2.0"
+  security_and_analysis = {
+    advanced_security = {
+      status = "enabled"
+    }
+    secret_scanning = {
+      status = "enabled"
+    }
+    secret_scanning_push_protection = {
+      status = "enabled"
+    }
+  }
+  topics               = ["terraform","ansible", "iac", "devops", "gcp", "argocd", "kubernetes"]
+  vulnerability_alerts = true
+  webhooks = {
+    atlantis = {
+      configuration = {
+        url          = "https://atlantis.fta.blast.co.id/events"
+        content_type = "json"
+        insecure_ssl = false
+        secret       = local.iac_secrets_map["github_webhook_atlantis"]
+      }
+      active = true
+      events = ["push", "pull_request", "pull_request_review", "issue_comment"]
+    }
+  }
 }
 
 module "dns_main" {
@@ -137,7 +107,7 @@ module "dns_main" {
   visibility    = "public"
 }
 
-# Deploy the VPC using the VPC module
+# Provisioning the VPC using the VPC module
 module "vpc_main" {
   source                  = "../../modules/gcp/vpc"
   region                  = var.region
