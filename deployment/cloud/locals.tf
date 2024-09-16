@@ -42,12 +42,22 @@ locals {
     Code    = "gsm"
     Feature = "iac"
   }
-  gsm_naming_standard = "${local.gsm_standard.Unit}-${local.gsm_standard.Env}-${local.gsm_standard.Code}-${local.gsm_standard.Feature }"
+  gsm_naming_standard = "${local.gsm_standard.Unit}-${local.gsm_standard.Env}-${local.gsm_standard.Code}-${local.gsm_standard.Feature}"
 
-  ## JSON encode the secret in plaintext
-  iac_secrets_json = jsonencode({for k,v in data.google_kms_secret.iac_secrets : k => v.plaintext})
-  ## Decode the secrets in plaintext
-  iac_secrets_map = jsondecode(module.gsm_iac.secret_version_data)
+  ## Convert decrypted secrets from terraform.tfvars to a map (see data.tf)
+  iac_secret_map = { for k, v in data.google_kms_secret.iac_secrets : k => v.plaintext }
+  ## Merge the decrypted secrets with the generated secrets (see secret_generator.tf)
+  iac_secret_merged = merge(
+    local.iac_secret_map,
+    {
+      "atlantis_ssh_base64"    = base64encode(tls_private_key.atlantis_ssh.private_key_pem)
+      "atlantis_password"      = random_password.atlantis_password.result
+      "atlantis_github_secret" = random_password.atlantis_github_secret.result
+    }
+  )
+
+  ## Convert the merged secrets to a json for the Secret Manager
+  iac_secrets_merged_json = jsonencode(local.iac_secret_merged)
 
   # Github Repository Standard
   ## Repository for fta_iac
@@ -57,7 +67,7 @@ locals {
     Code    = "repo"
     Feature = "iac"
   }
-  
+
   ## Repository for fta_helm
   repo_helm_standard = {
     Unit    = var.unit
@@ -65,4 +75,13 @@ locals {
     Code    = "repo"
     Feature = "helm"
   }
+
+  ## Google Compute Engine Standard
+  gce_atlantis_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "gce"
+    Feature = "atlantis"
+  }
+  gce_atlantis_naming_standard = "${local.gce_atlantis_standard.Unit}-${local.gce_atlantis_standard.Env}-${local.gce_atlantis_standard.Code}-${local.gce_atlantis_standard.Feature}"
 }

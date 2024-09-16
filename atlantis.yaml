@@ -1,0 +1,11 @@
+version: 3
+projects:
+  - dir: deployment/cloud
+    apply_requirements: ["mergeable"]
+    autoplan:
+      when_modified: ["*.tf*"]
+  - dir: deployment/service/fta-users
+    apply_requirements: ["mergeable"]
+    autoplan:
+      when_modified: ["*.tf*"]
+      enabled: true

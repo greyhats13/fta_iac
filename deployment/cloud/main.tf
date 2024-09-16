@@ -49,12 +49,11 @@ module "kms_main" {
 
 # Deploy the Google Secret Manager(GSM) using the Secret Manager module
 module "gsm_iac" {
-  source   = "../../modules/gcp/secret-manager"
-  region   = var.region
-  standard = local.gsm_standard
-  name     = local.gsm_naming_standard
-  ## Decrypt the secrets using the KMS key
-  secret_data = local.iac_secrets_json
+  source      = "../../modules/gcp/secret-manager"
+  region      = var.region
+  standard    = local.gsm_standard
+  name        = local.gsm_naming_standard
+  secret_data = local.iac_secrets_merged_json // Save the merged secret to the Secret Manager (see locals.tf)
 }
 
 
@@ -82,7 +81,7 @@ module "repo_iac" {
       status = "enabled"
     }
   }
-  topics               = ["terraform","ansible", "iac", "devops", "gcp", "argocd", "kubernetes"]
+  topics               = ["terraform", "ansible", "iac", "devops", "gcp", "argocd", "kubernetes"]
   vulnerability_alerts = true
   webhooks = {
     atlantis = {
@@ -90,7 +89,7 @@ module "repo_iac" {
         url          = "https://atlantis.fta.blast.co.id/events"
         content_type = "json"
         insecure_ssl = false
-        secret       = local.iac_secrets_map["github_webhook_atlantis"]
+        secret       = jsondecode(module.gsm_iac.secret_data)["atlantis_github_secret"]
       }
       active = true
       events = ["push", "pull_request", "pull_request_review", "issue_comment"]
@@ -189,4 +188,79 @@ module "vpc_main" {
     }
   }
   depends_on = [module.gcp_project]
+}
+
+# Provisioning VM for Atlantis (Terraform CI/CD)
+
+module "gce_atlantis" {
+  source               = "../../modules/gcp/gce"
+  region               = var.region
+  standard             = local.gce_atlantis_standard
+  name                 = local.gce_atlantis_naming_standard
+  zone                 = "${var.region}-a"
+  project_id           = data.google_project.curent.project_id
+  service_account_role = "roles/owner"
+  linux_user           = var.atlantis_user
+  public_key_openssh   = tls_private_key.atlantis_ssh.public_key_openssh
+  private_key_pem      = base64decode(jsondecode(module.gsm_iac.secret_data)["atlantis_ssh_base64"])
+  machine_type         = "e2-medium"
+  disk_size            = 20
+  disk_type            = "pd-standard"
+  network_self_link    = module.vpc_main.vpc_self_link
+  subnet_self_link     = module.vpc_main.subnet_self_link
+  is_public            = true
+  access_config = {
+    nat_ip                 = ""
+    public_ptr_domain_name = ""
+    network_tier           = "STANDARD"
+  }
+  image             = "debian-cloud/debian-12"
+  create_dns_record = true
+  dns_config = {
+    dns_name      = module.dns_main.dns_name
+    dns_zone_name = module.dns_main.dns_zone_name
+    record_type   = "A"
+    ttl           = 300
+  }
+  run_ansible       = true
+  ansible_path      = "ansible/atlantis"
+  ansible_tags      = ["initialization"]
+  ansible_skip_tags = []
+  ansible_vars = {
+    project_id = data.google_project.curent.project_id
+    # cluster_name      = module.gke_main.cluster_name
+    region                  = "${var.region}-a"
+    github_orgs             = var.github_owner
+    atlantis_version        = var.atlantis_version
+    atlantis_user           = var.atlantis_user
+    atlantis_domain         = "atlantis.${trimsuffix(module.dns_main.dns_name, ".")}" // remove the trailing dot
+    atlantis_repo_allowlist = "github.com/${flatten(module.repo_iac.*.full_name)[0]}"
+    # Decode the json secret data from the GSM module to a mao and pass it to the Ansible variables
+    github_token      = jsondecode(module.gsm_iac.secret_data)["github_token_atlantis"]
+    github_token_iac  = jsondecode(module.gsm_iac.secret_data)["github_token_iac"]
+    github_secret     = jsondecode(module.gsm_iac.secret_data)["atlantis_github_secret"]
+    atlantis_password = jsondecode(module.gsm_iac.secret_data)["atlantis_password"]
+  }
+
+  firewall_rules = {
+    "ssh" = {
+      protocol = "tcp"
+      ports    = ["22"]
+    }
+    "http" = {
+      protocol = "tcp"
+      ports    = ["80"]
+    }
+    "atlantis" = {
+      protocol = "tcp"
+      ports    = ["4141"]
+    }
+    "https" = {
+      protocol = "tcp"
+      ports    = ["443"]
+    }
+  }
+  priority      = 1000
+  source_ranges = ["0.0.0.0/0"]
+  depends_on    = [module.gsm_iac, module.repo_iac, module.dns_main]
 }

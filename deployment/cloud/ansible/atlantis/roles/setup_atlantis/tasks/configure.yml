@@ -14,13 +14,13 @@
   become: yes
   copy:
     content: |
-      repo-allowlist: "github.com/blastcoid/*"
+      repo-allowlist: "{{ atlantis_repo_allowlist }}"
       gh-user: "{{ github_orgs }}"
       gh-token: "{{ github_token }}"
       gh-webhook-secret: "{{ github_secret }}"
-    dest: "/etc/atlantis/config.yml" # Ganti dengan path yang sesuai
-    owner: atlantis
-    group: atlantis
+    dest: "/etc/atlantis/config.yml" # Change the path as per your requirement
+    owner: "{{ atlantis_user }}"
+    group: "{{ atlantis_user }}"
     mode: "0600"
   tags: 
     - configure_atlantis
@@ -34,7 +34,7 @@
       repos:
       - id: /.*/
         branch: /.*/
-        repo_config_file: infrastructure/gcp/atlantis.yaml
+        repo_config_file: atlantis.yaml
         plan_requirements: []
         apply_requirements: []
         workflow: default

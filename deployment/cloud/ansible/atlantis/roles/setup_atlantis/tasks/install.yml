@@ -10,7 +10,7 @@
 - name: Download Atlantis
   become: yes
   get_url:
-    url: "https://github.com/runatlantis/atlantis/releases/download/v0.25.0/atlantis_linux_amd64.zip"
+    url: "https://github.com/runatlantis/atlantis/releases/download/{{ atlantis_version }}/atlantis_linux_amd64.zip"
     dest: "/tmp/atlantis.zip"
     mode: "0755"
   tags: 

@@ -8,7 +8,7 @@
 
       [Service]
       Type=simple
-      User=atlantis
+      User={{ atlantis_user }}
       ExecStart=/usr/local/bin/atlantis server --config /etc/atlantis/config.yml --repo-config /etc/atlantis/atlantis.yaml
       Environment="GITHUB_TOKEN={{ github_token_iac }}"
       Environment="GITHUB_OWNER={{ github_orgs }}"

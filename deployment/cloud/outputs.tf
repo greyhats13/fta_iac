@@ -123,3 +123,21 @@ output "main_dns_name_servers" {
 output "main_dns_zone_visibility" {
   value = module.dns_main.dns_zone_visibility
 }
+
+
+# Github Outputs
+
+output "iac_repo_fullname" {
+  value = flatten(module.repo_iac.*.full_name)[0]
+}
+
+output "iac_repo_ssh_clone_url" {
+  value = flatten(module.repo_iac.*.ssh_clone_url)[0]
+}
+
+output "iac_repo_http_clone_url" {
+  value = flatten(module.repo_iac.*.http_clone_url)[0]
+}
+
+
+
