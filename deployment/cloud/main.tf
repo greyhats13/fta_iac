@@ -264,3 +264,117 @@ module "gce_atlantis" {
   source_ranges = ["0.0.0.0/0"]
   depends_on    = [module.gsm_iac, module.repo_iac, module.dns_main]
 }
+
+# Provisioning the GKE cluster using the GKE module
+module "gke_main" {
+  # Naming standard
+  source     = "../../modules/gcp/gke"
+  region     = var.region
+  project_id = data.google_project.curent.project_id
+  standard   = local.gke_standard
+  name       = local.gke_naming_standard
+  # cluster arguments
+  issue_client_certificate      = false
+  vpc_self_link                 = module.vpc_main.vpc_self_link
+  subnet_self_link              = module.vpc_main.subnet_self_link
+  pods_secondary_range_name     = module.vpc_main.pods_secondary_range_name
+  services_secondary_range_name = module.vpc_main.services_secondary_range_name
+  enable_autopilot              = false
+  cluster_autoscaling = {
+    enabled = false
+    resource_limits = {
+      cpu = {
+        minimum = 2
+        maximum = 8
+      }
+      memory = {
+        minimum = 4
+        maximum = 32
+      }
+    }
+  }
+  binary_authorization = {
+    evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE" # set to null to disable
+  }
+  network_policy = {
+    enabled  = false
+    provider = "CALICO"
+  }
+  datapath_provider = "ADVANCED_DATAPATH"
+
+  master_authorized_networks_config = {
+    cidr_blocks = {
+      cidr_block   = "202.165.33.0/24"
+      display_name = "my-home-public-ip"
+    }
+    gcp_public_cidrs_access_enabled = false
+  }
+
+  private_cluster_config = {
+    enable_private_endpoint = false
+    enable_private_nodes    = true
+    master_ipv4_cidr_block  = "192.168.0.0/28"
+  }
+
+  dns_config = {
+    cluster_dns        = "CLOUD_DNS"
+    cluster_dns_scope  = "VPC_SCOPE"
+    cluster_dns_domain = "${local.gke_standard.Code}.${trimsuffix(module.dns_main.dns_name, ".")}"
+  }
+
+  # node pool only work when enable_autopilot = false
+  node_config = {
+    spot = {
+      is_spot         = true
+      node_count      = 2
+      machine_type    = "e2-medium"
+      disk_size_gb    = 20
+      disk_type       = "pd-standard"
+      service_account = "781497044301-compute@developer.gserviceaccount.com" #data.google_service_account.gcompute_engine_default_service_account.email
+      oauth_scopes    = ["https://www.googleapis.com/auth/cloud-platform"]
+      tags            = ["spot"]
+      shielded_instance_config = {
+        enable_secure_boot          = true
+        enable_integrity_monitoring = false
+      }
+      workload_metadata_config = {
+        mode = "GKE_METADATA"
+      }
+    }
+    # ondemand = {
+    #   is_spot         = false
+    #   node_count      = 1
+    #   machine_type    = "e2-medium"
+    #   disk_size_gb    = 20
+    #   disk_type       = "pd-standard"
+    #   service_account = "781497044301-compute@developer.gserviceaccount.com" #data.google_service_account.gcompute_engine_default_service_account.email
+    #   oauth_scopes    = ["https://www.googleapis.com/auth/cloud-platform"]
+    #   tags            = ["ondemand"]
+    #   shielded_instance_config = {
+    #     enable_secure_boot          = true
+    #     enable_integrity_monitoring = false
+    #   }
+    #   workload_metadata_config = {
+    #     mode = "GKE_METADATA"
+    #   }
+    # }
+  }
+
+  autoscaling = {
+    ondemand = {
+      min_node_count  = 2
+      max_node_count  = 20
+      location_policy = "BALANCED"
+    }
+    spot = {
+      min_node_count  = 2
+      max_node_count  = 20
+      location_policy = "ANY"
+    }
+  }
+
+  node_management = {
+    auto_repair  = true
+    auto_upgrade = true
+  }
+}
