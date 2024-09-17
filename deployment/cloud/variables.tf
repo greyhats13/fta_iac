@@ -41,6 +41,11 @@ variable "github_repo" {
   description = "Github repository"
 }
 
+variable "github_oauth_client_id" {
+  type        = string
+  description = "Github OAuth client ID for ArgoCD"
+}
+
 ### Secret Chipertext from terraform.tfvars
 variable "iac_secrets_ciphertext" {
   description = "List of secrets ciphertext"

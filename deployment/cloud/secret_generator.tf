@@ -20,3 +20,12 @@ resource "tls_private_key" "atlantis_ssh" {
   algorithm = "RSA"
   rsa_bits  = 2048
 }
+
+resource "random_password" "argocd_github_secret" {
+  length           = 64
+  override_special = "!#$%&*@"
+  min_lower        = 10
+  min_upper        = 10
+  min_numeric      = 10
+  min_special      = 5
+}

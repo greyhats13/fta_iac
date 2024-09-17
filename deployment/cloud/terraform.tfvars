@@ -1,10 +1,11 @@
-unit             = "fta"
-env              = "mstr"
-region           = "asia-southeast2"
-github_repo      = "fta_iac"
-github_owner     = "greyhats13"
-atlantis_version = "v0.29.0"
-atlantis_user    = "atlantis"
+unit                   = "fta"
+env                    = "mstr"
+region                 = "asia-southeast2"
+github_repo            = "fta_iac"
+github_owner           = "greyhats13"
+github_oauth_client_id = "c02c243cb296a804f41b"
+atlantis_version       = "v0.29.0"
+atlantis_user          = "atlantis"
 # The following is a list of secrets that are encrypted using the KMS key
 iac_secrets_ciphertext = {
   github_token_iac           = "CiQAVucnPlSoVrFW356BVXK9h9ZVPm4bPTVX9heDhVq759X3f4gSUQA4ny4NQIrKNdhCf1d1Dlh9lCIUxkNRl7HPfKAZ0UeLvb8cH19Ru0Zss/1ChBO0MTsBQAi8uQs+ORnGlYr2kK07ZjtJyP+pRE/e0fnCfRzWsw=="
