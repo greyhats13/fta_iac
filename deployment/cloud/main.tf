@@ -496,40 +496,40 @@ resource "kubectl_manifest" "cluster_issuer" {
 
 ## ArgoCD
 ## ArgoCD is a declarative, GitOps continuous delivery tool for Kubernetes.
-module "argocd" {
-  source                      = "../../modules/cicd/helm"
-  region                      = var.region
-  standard                    = local.argodcd_standard
-  repository                  = "https://argoproj.github.io/argo-helm"
-  chart                       = "argo-cd"
-  values                      = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
-  namespace                   = "argocd"
-  create_namespace            = true
-  create_service_account      = true
-  use_workload_identity       = true
-  project_id                  = data.google_project.curent.project_id
-  google_service_account_role = ["roles/container.admin", "roles/secretmanager.secretAccessor"]
-  dns_name                    = trimsuffix(module.dns_main.dns_name, ".")
-  extra_vars = {
-    github_orgs      = var.github_orgs
-    github_client_id = var.github_oauth_client_id
-    ARGOCD_VERSION   = var.argocd_version
-    AVP_VERSION      = var.argocd_vault_plugin_version
-  }
-  helm_sets_sensitive = [
-    {
-      name  = "configs.secret.githubSecret"
-      value = jsondecode(module.gsm_iac.secret_data)["argocd_github_secret"]
-    },
-    {
-      name  = "configs.secret.extra.dex\\.github\\.clientSecret"
-      value = jsondecode(module.gsm_iac.secret_data)["github_oauth_client_secret"]
-    },
-  ]
-  depends_on = [
-    module.gke_main,
-    module.external_dns,
-    module.ingress_nginx,
-    kubectl_manifest.cluster_issuer
-  ]
-}
+# module "argocd" {
+#   source                      = "../../modules/cicd/helm"
+#   region                      = var.region
+#   standard                    = local.argodcd_standard
+#   repository                  = "https://argoproj.github.io/argo-helm"
+#   chart                       = "argo-cd"
+#   values                      = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+#   namespace                   = "argocd"
+#   create_namespace            = true
+#   create_service_account      = true
+#   use_workload_identity       = true
+#   project_id                  = data.google_project.curent.project_id
+#   google_service_account_role = ["roles/container.admin", "roles/secretmanager.secretAccessor"]
+#   dns_name                    = trimsuffix(module.dns_main.dns_name, ".")
+#   extra_vars = {
+#     github_orgs      = var.github_orgs
+#     github_client_id = var.github_oauth_client_id
+#     ARGOCD_VERSION   = var.argocd_version
+#     AVP_VERSION      = var.argocd_vault_plugin_version
+#   }
+#   helm_sets_sensitive = [
+#     {
+#       name  = "configs.secret.githubSecret"
+#       value = jsondecode(module.gsm_iac.secret_data)["argocd_github_secret"]
+#     },
+#     {
+#       name  = "configs.secret.extra.dex\\.github\\.clientSecret"
+#       value = jsondecode(module.gsm_iac.secret_data)["github_oauth_client_secret"]
+#     },
+#   ]
+#   depends_on = [
+#     module.gke_main,
+#     module.external_dns,
+#     module.ingress_nginx,
+#     kubectl_manifest.cluster_issuer
+#   ]
+# }

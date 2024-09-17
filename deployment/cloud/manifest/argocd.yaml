@@ -1,4 +1,6 @@
+# Ref: https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd
 global:
+  domain: "${feature}.${dns_name}"
   nodeSelector:
     iam.gke.io/gke-metadata-server-enabled: "true"
 
@@ -103,20 +105,16 @@ server:
     servicePortHttpName: http
   ingress:
     enabled: true
-    hosts:
-      - ${feature}.${dns_name}
+    ingressClassName: "nginx"
     annotations:
-      # nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
       # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-      external-dns.alpha.kubernetes.io/hostname: ${feature}.${dns_name}
+      external-dns.alpha.kubernetes.io/hostname: "${feature}.${dns_name}"
       external-dns.alpha.kubernetes.io/ttl: "300"
       kubernetes.io/tls-acme: "true"
       cert-manager.io/cluster-issuer: "letsencrypt-${unit}"
-    ingressClassName: "nginx"
-    tls:
-      - secretName: "${unit}-${feature}-server-tls"
-        hosts:
-          - ${feature}.${dns_name}
+    tls: true
     # http: false
 
 # ref: https://github.com/argoproj-labs/argocd-vault-plugin/blob/main/manifests/cmp-sidecar/argocd-repo-server.yaml
