@@ -1,186 +1,152 @@
+# Google Kubernetes Engine (GKE) Module for Google Cloud Platform (GCP)
 
----
-
-# GKE (Google Kubernetes Engine) Module for Google Cloud Platform (GCP)
-
-This Terraform module provisions a Google Kubernetes Engine (GKE) cluster on GCP, along with associated resources like node pools, network policies, and cluster role bindings.
+This Terraform module provisions a fully configurable Google Kubernetes Engine (GKE) cluster on GCP. It supports features such as private clusters, autoscaling, network policies, Binary Authorization, and DNS configuration. Additionally, it allows for flexible node pool setups with autoscaling, spot instances, and Shielded VM configurations.
 
 ## Features
 
-- **Cluster Creation**: Provisions a GKE cluster with configurable settings for private endpoints, autoscaling, binary authorization, and more.
-- **Node Pool Management**: Defines multiple node pools with support for on-demand and spot instances, shielded instance configurations, and auto-scaling.
-- **Network Policy Configuration**: Enables network policies with support for various providers like Calico, Cilium, etc.
-- **DNS Configuration**: Configures DNS within the cluster, including DNS scope and domain settings.
-- **Cluster Role Binding**: Defines cluster role bindings for client cluster admin.
-- **Autopilot Support**: Optionally enables GKE Autopilot, a fully managed Kubernetes service.
-- **Binary Authorization**: Configures Binary Authorization to ensure only trusted container images are deployed.
+- **GKE Cluster Creation**: Provisions a GKE cluster with customizable node pools, network policies, Binary Authorization, and DNS settings.
+- **Private Cluster Configuration**: Supports the creation of private clusters with private nodes and master endpoints.
+- **Cluster Autoscaling**: Configurable autoscaling for both the cluster and node pools.
+- **Node Pool Management**: Create multiple node pools with various configurations, including spot instances and Shielded VMs.
+- **Network Policies**: Supports network policies to control communication between Pods.
+- **Binary Authorization**: Ensures only trusted container images are deployed.
+- **DNS Configuration**: Custom DNS provider and domain settings for the cluster.
+- **Master Authorized Networks**: Restrict access to the cluster master endpoint through specific CIDR blocks.
+- **Workload Identity**: Configure GKE Workload Identity for better security and identity management in your cluster.
 
 ## Usage
 
 ```hcl
-# create gke from modules gke
-module "gkubernetes_engine" {
-  # Naming standard
+module "gke_cluster" {
   source = "<path_to_module_directory>"
 
-  region = "<GCP Region>"
-  unit   = "<Business Unit Code>"
-  env    = "<Environment>" # dev, stg, or prd
-  code   = "gkubernetes-engine"
-  feature = "cluster"
-  # cluster arguments
-  issue_client_certificate      = true
-  vpc_self_link                 = <vpc self link>
-  subnet_self_link              = <subnet self link>
-  pods_secondary_range_name     = <pods secondary range name>
-  services_secondary_range_name = <services secondary range name>
-  services_secondary_range_name = <services secondary range name>
-  enable_autopilot              = true
+  project_id              = "my-gcp-project"
+  region                  = "us-central1"
+  name                    = "my-cluster"
+  enable_autopilot        = false
+  issue_client_certificate = true
+  vpc_self_link           = "https://www.googleapis.com/compute/v1/projects/my-project/global/networks/my-vpc"
+  subnet_self_link        = "https://www.googleapis.com/compute/v1/projects/my-project/regions/us-central1/subnetworks/my-subnet"
+
+  private_cluster_config = {
+    enable_private_endpoint = true
+    enable_private_nodes    = true
+    master_ipv4_cidr_block  = "10.0.0.0/28"
+  }
+
   cluster_autoscaling = {
     enabled = true
     resource_limits = {
       cpu = {
-        minimum = 2
-        maximum = 8
+        minimum = 1
+        maximum = 100
       }
       memory = {
-        minimum = 4
-        maximum = 32
+        minimum = 2
+        maximum = 200
       }
     }
   }
-  binary_authorization = {
-    evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
+
+  node_config = {
+    on_demand_pool = {
+      is_spot         = false
+      node_count      = 3
+      machine_type    = "n1-standard-1"
+      disk_size_gb    = 100
+      disk_type       = "pd-standard"
+      service_account = "my-service-account@gcp-project.iam.gserviceaccount.com"
+      oauth_scopes    = ["https://www.googleapis.com/auth/cloud-platform"]
+      tags            = ["web", "api"]
+      shielded_instance_config = {
+        enable_secure_boot          = true
+        enable_integrity_monitoring = true
+      }
+    }
   }
+
+  autoscaling = {
+    on_demand_pool = {
+      min_node_count  = 1
+      max_node_count  = 10
+      location_policy = "ANY"
+    }
+  }
+
   network_policy = {
     enabled  = true
     provider = "CALICO"
   }
-  datapath_provider = "ADVANCED_DATAPATH"
-  private_cluster_config = {
-    dev = {
-      enable_private_endpoint = false
-      enable_private_nodes    = true
-      master_ipv4_cidr_block  = <master ipv4 cidr block for dev>
-    }
-    stg = {
-      enable_private_endpoint = true
-      enable_private_nodes    = true
-      master_ipv4_cidr_block  = <master ipv4 cidr block for staging>
-    }
-    prd = {
-      enable_private_endpoint = true
-      enable_private_nodes    = true
-      master_ipv4_cidr_block  = <master ipv4 cidr block for production>
-    }
-  }
 
   dns_config = {
-    dev = {
-      cluster_dns        = "CLOUD_DNS"
-      cluster_dns_scope  = "VPC_SCOPE"
-      cluster_dns_domain = "blast.local"
-    }
-    stg = {
-      cluster_dns        = "CLOUD_DNS"
-      cluster_dns_scope  = "VPC_SCOPE"
-      cluster_dns_domain = "blast.local"
-    }
-    prd = {
-      cluster_dns        = "CLOUD_DNS"
-      cluster_dns_scope  = "VPC_SCOPE"
-      cluster_dns_domain = "blast.local"
-    }
-  }
-  #node pool only work when
-  node_config = {
-    ondemand = {
-      is_spot    = false
-      node_count = 1
-      machine_type = {
-        dev = "e2-medium"
-        stg = "e2-standard-2"
-        prd = "e2-standard-4"
-      }
-      disk_size_gb    = 20
-      disk_type       = ["pd-standard", "pd-ssd"]
-      service_account = <service account for ondemand>
-      oauth_scopes    = ["https://www.googleapis.com/auth/cloud-platform"]
-      tags            = ["ondemand"]
-      shielded_instance_config = {
-        enable_secure_boot          = true
-        enable_integrity_monitoring = false
-      }
-    },
-    spot = {
-      is_spot    = true
-      node_count = 0
-      machine_type = {
-        dev = "e2-medium"
-        stg = "e2-standard-2"
-        prd = "e2-standard-4"
-      }
-      disk_size_gb    = 20
-      disk_type       = ["pd-standard", "pd-ssd"]
-      service_account = <service account for spot>
-      oauth_scopes    = ["https://www.googleapis.com/auth/cloud-platform"]
-      tags            = ["spot"]
-      shielded_instance_config = {
-        enable_secure_boot          = true
-        enable_integrity_monitoring = false
-      }
-      min_node_count = 0
-      max_node_count = 20
-    }
-  }
-  node_management = {
-    auto_repair  = false
-    auto_upgrade = false
+    cluster_dns        = "CLOUD_DNS"
+    cluster_dns_scope  = "VPC_SCOPE"
+    cluster_dns_domain = "my-cluster.local"
   }
 }
 ```
 
 ## Inputs
 
-| Name | Description | Type | Default | Required |
-|------|-------------|:----:|:-----:|:-----:|
-| region | The GCP region where resources will be created. | string | n/a | yes |
-| unit | The business unit code representing the organizational unit. | string | n/a | yes |
-| env | The environment stage (e.g., dev, prod) where the infrastructure will be deployed. | string | n/a | yes |
-| code | The service domain code representing the specific service or application. | string | n/a | yes |
-| feature | The specific feature or component of the AWS service being configured. | string | n/a | yes |
-| issue_client_certificate | Whether to issue a client certificate for authenticating to the cluster. | bool | n/a | yes |
-| vpc_self_link | The self-link URL of the VPC where the cluster will be created. | string | n/a | yes |
-| subnet_self_link | The self-link URL of the subnet where the cluster will be created. | string | n/a | yes |
-| private_cluster_config | Configuration for enabling private endpoints and nodes within the cluster. | map(object) | n/a | yes |
-| enable_autopilot | Whether to enable GKE Autopilot, a fully managed Kubernetes service. | bool | n/a | yes |
-| cluster_autoscaling | Configuration for enabling cluster autoscaling, including resource limits for CPU and memory. | object | n/a | yes |
-| binary_authorization | Configuration for Binary Authorization, which ensures only trusted container images are deployed. | object | n/a | yes |
-| network_policy | Configuration for network policies, which control communication between Pods. | object | n/a | yes |
-| datapath_provider | The provider for the datapath, which controls how data is routed within the cluster. | string | `null` | no |
-| dns_config | Configuration for DNS within the cluster, including DNS scope and domain settings. | map(object) | n/a | yes |
-| pods_secondary_range_name | The name of the secondary IP range for Pods in the cluster. | string | n/a | yes |
-| services_secondary_range_name | The name of the secondary IP range for Services in the cluster. | string | n/a | yes |
-| node_config | Configuration for on-demand and spot nodes, including machine type, disk size, and other settings. | map(object) | n/a | yes |
-| node_management | Configuration for node management, including auto-repair and auto-upgrade settings. | object | n/a | yes |
+| Name                               | Description                                                                                      | Type     | Default  | Required |
+|------------------------------------|--------------------------------------------------------------------------------------------------|----------|----------|:--------:|
+| `project_id`                       | The GCP project ID where the resources will be created.                                           | `string` | n/a      |   yes    |
+| `region`                           | The GCP region where the cluster will be created.                                                 | `string` | n/a      |   yes    |
+| `name`                             | The name of the GKE cluster.                                                                      | `string` | n/a      |   yes    |
+| `enable_autopilot`                 | Whether to enable GKE Autopilot mode.                                                             | `bool`   | `false`  |    no    |
+| `vpc_self_link`                    | The self-link of the VPC where the cluster will be created.                                       | `string` | n/a      |   yes    |
+| `subnet_self_link`                 | The self-link of the subnet where the cluster will be created.                                    | `string` | n/a      |   yes    |
+| `private_cluster_config`           | Configuration for private clusters, including private nodes and endpoints.                        | `object` | `null`   |    no    |
+| `issue_client_certificate`         | Whether to issue a client certificate for authenticating to the cluster.                          | `bool`   | `false`  |    no    |
+| `cluster_autoscaling`              | Configuration for cluster autoscaling, including resource limits.                                 | `object` | `null`   |    no    |
+| `node_config`                      | Configuration for the node pools, including machine type, disk size, and spot instance settings.   | `map`    | `{}`     |    no    |
+| `autoscaling`                      | Autoscaling configuration for node pools, including minimum and maximum nodes.                    | `map`    | `{}`     |    no    |
+| `network_policy`                   | Network policy configuration for the cluster.                                                     | `object` | `null`   |    no    |
+| `dns_config`                       | DNS configuration for the cluster, including DNS provider and domain settings.                    | `object` | `null`   |    no    |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| cluster_id | The unique identifier of the GKE cluster. |
-| cluster_name | The name of the GKE cluster. |
-| cluster_endpoint | The endpoint URL for accessing the GKE cluster. |
-| cluster_ca_certificate | The CA certificate used for authenticating to the GKE cluster. |
-| cluster_location | The location (region or zone) of the GKE cluster. |
-| cluster_master_version | The master version of the GKE cluster. |
-| cluster_node_version | The node version of the GKE cluster. |
-| cluster_node_pools | The node pools associated with the GKE cluster. |
+| Name                          | Description                                                   |
+|-------------------------------|---------------------------------------------------------------|
+| `cluster_id`                   | The unique identifier of the GKE cluster.                     |
+| `cluster_name`                 | The name of the GKE cluster.                                  |
+| `cluster_location`             | The location (region or zone) of the GKE cluster.             |
+| `cluster_self_link`            | The self-link of the GKE cluster.                             |
+| `cluster_endpoint`             | The IP address of the Kubernetes master endpoint.             |
+| `cluster_client_certificate`   | The base64-encoded public certificate for client authentication. |
+| `cluster_client_key`           | The base64-encoded private key for client authentication.      |
+| `cluster_ca_certificate`       | The base64-encoded root certificate for the cluster.          |
+| `cluster_master_version`       | The version of the Kubernetes master for the GKE cluster.     |
+
+## Notes
+
+- **Private Cluster**: If creating a private cluster, make sure to configure both `enable_private_nodes` and `enable_private_endpoint` in `private_cluster_config`.
+- **Autopilot Mode**: When `enable_autopilot` is set to `true`, the cluster is fully managed by GCP. Some configurations such as node pools and network policies are automatically handled by GCP.
+- **Cluster Autoscaling**: Use the `cluster_autoscaling` object to define the resource limits for CPU and memory to optimize performance and cost.
+- **Node Pools**: Multiple node pools with custom configurations can be defined, including spot instances and shielded VMs for added security.
+- **Network Policies**: Enabling network policies (e.g., Calico) enhances security by controlling the communication between Pods within the cluster.
+- **Binary Authorization**: Ensure trusted images are deployed by configuring `binary_authorization` to verify container integrity.
 
 ## Requirements
 
-- Terraform v0.14 or higher
-- Google Cloud Platform (GCP) account with appropriate permissions
-- Google Cloud SDK (gcloud) installed and configured
+- **Terraform** version >= 0.12
+- **Google Cloud Provider** plugin for Terraform
 
----
+## Resources Created
+
+- **google_container_cluster**: The primary GKE cluster resource.
+- **google_container_node_pool**: (Optional) Custom node pools for the GKE cluster.
+- **google_service_account**: (Optional) Service account for the node pools.
+- **google_project_iam_member**: (Optional) IAM role assignments for the service account.
+
+## Troubleshooting
+
+- **Node Pool Scaling Issues**: Check your autoscaling configurations in `autoscaling` for each node pool. Ensure that the `min_node_count` and `max_node_count` values are correctly set.
+- **Kubernetes Master Endpoint Access**: If you're unable to connect to the master endpoint, verify that the CIDR blocks in `master_authorized_networks_config` allow your IP.
+- **Network Policy Conflicts**: Ensure that network policies are compatible with your chosen `datapath_provider`.
+
+## References
+
+- [Google Kubernetes Engine Documentation](https://cloud.google.com/kubernetes-engine/docs)
+- [Terraform Google Provider - google_container_cluster](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster)
+```
