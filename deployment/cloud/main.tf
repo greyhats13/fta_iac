@@ -393,7 +393,7 @@ module "external-dns" {
   project_id                  = data.google_project.curent.project_id
   google_service_account_role = ["roles/dns.admin"]
   create_managed_certificate  = false
-  values                      = ["${file("helm/external-dns.yaml")}"]
+  values                      = ["${file("helm/${local.external_dns_standard.Feature}.yaml")}"]
   helm_sets = [
     {
       name  = "provider"
@@ -416,5 +416,23 @@ module "external-dns" {
   create_namespace = true
   depends_on = [
     module.gke_main
+  ]
+}
+
+## Nginx Ingress Controller
+## Nginx Ingress Controller is an Ingress controller that manages external access to HTTP services in a Kubernetes cluster using Nginx.
+module "helm_nginx" {
+  source     = "../../modules/cicd/helm"
+  region     = var.region
+  standard   = local.ingress_nginx_standard
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  values     = ["${file("helm/${local.ingress_nginx_standard.Feature}.yaml")}"]
+  namespace  = "ingress"
+  project_id = data.google_project.curent.project_id
+  dns_name   = trimsuffix(module.dns_main.dns_name, ".")
+  depends_on = [
+    module.gke_main,
+    module.external-dns
   ]
 }
