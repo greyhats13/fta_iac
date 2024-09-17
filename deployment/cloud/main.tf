@@ -88,6 +88,45 @@ module "repo_iac" {
   }
 }
 
+## Provisioning the Github repository for fta_gitops
+module "repo_gitops" {
+  source                 = "../../modules/cicd/github_repo"
+  standard               = local.repo_gitops_standard
+  visibility             = "public"
+  has_issues             = true
+  has_discussions        = true
+  has_projects           = true
+  has_wiki               = true
+  delete_branch_on_merge = true
+  auto_init              = true
+  license_template       = "apache-2.0"
+  security_and_analysis = {
+    advanced_security = {
+      status = "enabled"
+    }
+    secret_scanning = {
+      status = "enabled"
+    }
+    secret_scanning_push_protection = {
+      status = "enabled"
+    }
+  }
+  topics               = ["gitops", "helm", "devops", "argocd", "argocd-vault-plugin", "kubernetes"]
+  vulnerability_alerts = true
+  webhooks = {
+    argocd = {
+      configuration = {
+        url          = "https://argocd.fta.blast.co.id/api/webhook"
+        content_type = "json"
+        insecure_ssl = false
+        secret       = jsondecode(module.gsm_iac.secret_data)["argocd_github_secret"]
+      }
+      active = true
+      events = ["push"]
+    }
+  }
+}
+
 module "dns_main" {
   source        = "../../modules/gcp/dns"
   region        = var.region
@@ -434,24 +473,62 @@ module "ingress_nginx" {
 ## Cert Manager
 ## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
 module "cert_manager" {
-  source            = "../../modules/cicd/helm"
-  region            = var.region
-  standard          = local.cert_manager_standard
-  repository        = "https://charts.jetstack.io"
-  chart             = "cert-manager"
-  project_id        = data.google_project.curent.project_id
-  values            = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
-  namespace         = "cert-manager"
-  create_namespace  = true
+  source           = "../../modules/cicd/helm"
+  region           = var.region
+  standard         = local.cert_manager_standard
+  repository       = "https://charts.jetstack.io"
+  chart            = "cert-manager"
+  project_id       = data.google_project.curent.project_id
+  values           = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+  namespace        = "cert-manager"
+  create_namespace = true
   depends_on = [
     module.gke_main
   ]
 }
 ## Create Cluster Issuer for Cert Manager
-resource "kubectl_manifest" "manifests" {
+resource "kubectl_manifest" "cluster_issuer" {
   yaml_body = templatefile("manifest/cluster-issuer.yaml", {
-    unit                 = var.unit
+    unit = var.unit
   })
   depends_on = [module.cert_manager]
 }
 
+# ## ArgoCD
+# ## ArgoCD is a declarative, GitOps continuous delivery tool for Kubernetes.
+# module "helm_argocd" {
+#   source                      = "../../modules/cicd/helm"
+#   region                      = var.region
+#   standard                    = local.argodcd_standard
+#   repository                  = "https://argoproj.github.io/argo-helm"
+#   chart                       = "argo-cd"
+#   values                      = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+#   namespace                   = "cd"
+#   create_namespace            = true
+#   create_service_account      = true
+#   use_workload_identity       = true
+#   project_id                  = data.google_project.curent.project_id
+#   google_service_account_role = ["roles/container.admin", "roles/secretmanager.secretAccessor"]
+#   dns_name                    = trimsuffix(module.dns_blast.dns_name, ".")
+#   extra_vars = {
+#     github_orgs      = var.github_owner
+#     github_client_id = var.github_oauth_client_id
+#     AVP_VERSION      = "1.18.1" // ArgoCD Vault Plugin version
+#   }
+#   helm_sets_sensitive = [
+#     {
+#       name  = "configs.secret.githubSecret"
+#       value = jsondecode(module.gsm_iac.secret_data)["github-secret"]
+#     },
+#     {
+#       name  = "configs.secret.extra.dex\\.github\\.clientSecret"
+#       value = jsondecode(module.gsm_iac.secret_data)["github_oauth_client_secret"]
+#     },
+#   ]
+#   depends_on = [
+#     module.gke_main,
+#     module.external-dns,
+#     module.helm_nginx,
+#     kubectl_manifest.cluster_issuer
+#   ]
+# }

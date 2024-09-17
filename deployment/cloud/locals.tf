@@ -54,6 +54,7 @@ locals {
       "atlantis_ssh_base64"    = base64encode(tls_private_key.atlantis_ssh.private_key_pem)
       "atlantis_password"      = random_password.atlantis_password.result
       "atlantis_github_secret" = random_password.atlantis_github_secret.result
+      "argocd_github_secret"   = random_password.argocd_github_secret.result
     }
   )
 
@@ -70,11 +71,11 @@ locals {
   }
 
   ## Repository for fta_helm
-  repo_helm_standard = {
+  repo_gitops_standard = {
     Unit    = var.unit
     Env     = var.env
     Code    = "repo"
-    Feature = "helm"
+    Feature = "gitops"
   }
 
   ## Google Compute Engine Standard
@@ -116,5 +117,12 @@ locals {
     Env     = var.env
     Code    = "helm"
     Feature = "cert-manager"
+  }
+  ## Argo CD Standard
+  argodcd_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "helm"
+    Feature = "argocd"
   }
 }
