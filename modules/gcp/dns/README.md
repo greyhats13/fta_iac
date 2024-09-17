@@ -62,28 +62,6 @@ When `visibility` is set to `"private"`, the `private_visibility_config` object 
 | `dns_name_servers`     | A list of name servers assigned to the zone    |
 | `dns_zone_visibility`  | The visibility setting of the zone (`public` or `private`) |
 
-## Example
-
-```hcl
-module "dns_zone" {
-  source = "./modules/dns"
-
-  name          = "my-private-zone"
-  dns_name      = "internal.example.com."
-  force_destroy = true
-  visibility    = "private"
-
-  private_visibility_config = {
-    networks = {
-      network_url = "https://www.googleapis.com/compute/v1/projects/my-project/global/networks/my-vpc-network"
-    }
-    gke_clusters = {
-      gke_cluster_name = "projects/my-project/locations/us-central1/clusters/my-gke-cluster"
-    }
-  }
-}
-```
-
 ## Notes
 
 - **Public vs. Private Zones**: When creating a private zone, ensure that you provide the `private_visibility_config` with either VPC network(s) or GKE cluster(s) that should have access to the zone.

@@ -4,10 +4,10 @@ terraform {
       source  = "integrations/github"
       version = "~> 6.0"
     }
-    # kubectl = {
-    #   source  = "alon-dotan-starkware/kubectl"
-    #   version = "1.11.2"
-    # }
+    kubectl = {
+      source  = "alon-dotan-starkware/kubectl"
+      version = "1.11.2"
+    }
   }
 }
 
@@ -20,20 +20,17 @@ provider "google" {
   region  = var.region
 }
 
-# provider "kubernetes" {
-#   config_path = "~/.kube/config"
-#   experiments {
-#     manifest_resource = true
-#   }
-# }
+provider "kubernetes" {
+  config_path = "~/.kube/config"
+}
 
-# # create helm provider
-# provider "helm" {
-#   kubernetes {
-#     config_path = "~/.kube/config"
-#   }
-# }
+# create helm provider
+provider "helm" {
+  kubernetes {
+    config_path = "~/.kube/config"
+  }
+}
 
-# provider "kubectl" {
-#   config_path = "~/.kube/config"
-# }
+provider "kubectl" {
+  config_path = "~/.kube/config"
+}
