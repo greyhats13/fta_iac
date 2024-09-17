@@ -224,7 +224,7 @@ module "gce_atlantis" {
   }
   run_ansible       = true
   ansible_path      = "ansible/atlantis"
-  ansible_tags      = ["initialization"]
+  ansible_tags      = ["setup_kubectl"]
   ansible_skip_tags = []
   ansible_vars = {
     project_id = data.google_project.curent.project_id
