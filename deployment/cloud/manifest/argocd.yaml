@@ -104,11 +104,11 @@ server:
   ingress:
     enabled: true
     hosts:
-      - "${feature}.${dns_name}"
+      - ${feature}.${dns_name}
     annotations:
       # nginx.ingress.kubernetes.io/ssl-passthrough: "true"
       # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-      external-dns.alpha.kubernetes.io/hostname: "${feature}.${dns_name}"
+      external-dns.alpha.kubernetes.io/hostname: ${feature}.${dns_name}
       external-dns.alpha.kubernetes.io/ttl: "300"
       kubernetes.io/tls-acme: "true"
       cert-manager.io/cluster-issuer: "letsencrypt-${unit}"
@@ -116,7 +116,7 @@ server:
     tls:
       - secretName: "${unit}-${feature}-server-tls"
         hosts:
-          - "${feature}.${dns_name}"
+          - ${feature}.${dns_name}
     # http: false
 
 # ref: https://github.com/argoproj-labs/argocd-vault-plugin/blob/main/manifests/cmp-sidecar/argocd-repo-server.yaml
