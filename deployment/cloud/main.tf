@@ -1,11 +1,3 @@
-# Backend configuration
-terraform {
-  backend "gcs" {
-    bucket = "fta-mstr-gcs-tfstate"
-    prefix = "fta/cloud/deployment"
-  }
-}
-
 module "gcp_project" {
   source     = "../../modules/gcp/project-service"
   project_id = data.google_project.curent.project_id
@@ -429,6 +421,7 @@ module "helm_nginx" {
   chart      = "ingress-nginx"
   values     = ["${file("helm/${local.ingress_nginx_standard.Feature}.yaml")}"]
   namespace  = "ingress"
+  create_namespace = true
   project_id = data.google_project.curent.project_id
   dns_name   = trimsuffix(module.dns_main.dns_name, ".")
   depends_on = [

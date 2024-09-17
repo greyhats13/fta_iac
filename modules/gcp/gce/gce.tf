@@ -111,11 +111,11 @@ resource "null_resource" "ansible_playbook" {
     )
   }
 
-  # Clean up the Ansible variables file after playbook execution
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -f ansible/atlantis/ansible_vars.json ansible/atlantis/id_rsa.pem"
-  }
+  # # Clean up the Ansible variables file after playbook execution
+  # provisioner "local-exec" {
+  #   when    = destroy
+  #   command = "rm -f ansible/atlantis/ansible_vars.json ansible/atlantis/id_rsa.pem"
+  # }
 
   # Trigger to re-run playbook if it changes
   triggers = {
