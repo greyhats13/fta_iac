@@ -149,4 +149,3 @@ module "gke_cluster" {
 
 - [Google Kubernetes Engine Documentation](https://cloud.google.com/kubernetes-engine/docs)
 - [Terraform Google Provider - google_container_cluster](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster)
-```
