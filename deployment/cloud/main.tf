@@ -304,7 +304,7 @@ module "gke_main" {
 
   master_authorized_networks_config = {
     cidr_blocks = {
-      cidr_block   = "202.165.33.0/24"
+      cidr_block   = "103.104.13.0/24"
       display_name = "my-home-public-ip"
     }
     gcp_public_cidrs_access_enabled = false
