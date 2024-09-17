@@ -36,7 +36,7 @@ locals {
   }
   dns_naming_standard = "${local.dns_standard.Unit}-${local.dns_standard.Env}-${local.dns_standard.Code}-${local.dns_standard.Feature}"
 
-  # Google Secret Manager Standard
+  ## Google Secret Manager Standard
   gsm_standard = {
     Unit    = var.unit
     Env     = var.env
@@ -95,7 +95,7 @@ locals {
   }
   gke_naming_standard = "${local.gke_standard.Unit}-${local.gke_standard.Env}-${local.gke_standard.Code}-${local.gke_standard.Feature}"
 
-  # Kubernetes Addons Standard
+  # Kubernetes Addons
   ## External DNS Standard
   external_dns_standard = {
     Unit    = var.unit
@@ -109,5 +109,12 @@ locals {
     Env     = var.env
     Code    = "helm"
     Feature = "ingress-nginx"
+  }
+  ## Cert Manager Standard
+  cert_manager_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "helm"
+    Feature = "cert-manager"
   }
 }

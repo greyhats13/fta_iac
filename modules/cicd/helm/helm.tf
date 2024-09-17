@@ -21,7 +21,7 @@ resource "helm_release" "helm" {
   version             = var.helm_version
   values = length(var.values) > 0 ? sensitive([
     "${templatefile(
-      "helm/${var.standard.Feature}.yaml",
+      "manifest/${var.standard.Feature}.yaml",
       {
         service_account_name       = local.sa_naming_standard
         unit                       = var.standard.Unit
@@ -66,34 +66,4 @@ resource "helm_release" "helm" {
       value = set_list.value.value
     }
   }
-}
-
-resource "kubernetes_manifest" "manifests" {
-  count = length(var.k8s_manifests)
-  manifest = yamldecode(templatefile("k8s/${var.k8s_manifests[count.index]}", {
-    unit                 = var.standard.Unit
-    env                  = var.standard.Env
-    code                 = var.standard.Code
-    feature              = var.standard.Feature
-    service_account_name = local.sa_naming_standard,
-    namespace            = local.namespace,
-    dns_name             = var.dns_name
-    extra_vars           = var.extra_vars
-  }))
-  depends_on = [helm_release.helm]
-}
-
-resource "kubectl_manifest" "manifests" {
-  count = length(var.kubectl_manifests)
-  yaml_body = templatefile("k8s/${var.kubectl_manifests[count.index]}", {
-    unit                 = var.standard.Unit
-    env                  = var.standard.Env
-    code                 = var.standard.Code
-    feature              = var.standard.Feature
-    service_account_name = local.sa_naming_standard,
-    namespace            = local.namespace,
-    dns_name             = var.dns_name
-    extra_vars           = var.extra_vars
-  })
-  depends_on = [helm_release.helm]
 }

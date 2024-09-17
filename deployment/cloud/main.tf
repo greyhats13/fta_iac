@@ -375,7 +375,7 @@ module "gke_main" {
 
 ## External DNS
 ## External DNS is a Kubernetes addon that configures public DNS servers with information about exposed services to make them discoverable.
-module "external-dns" {
+module "external_dns" {
   source                      = "../../modules/cicd/helm"
   region                      = var.region
   standard                    = local.external_dns_standard
@@ -386,7 +386,7 @@ module "external-dns" {
   project_id                  = data.google_project.curent.project_id
   google_service_account_role = ["roles/dns.admin"]
   create_managed_certificate  = false
-  values                      = ["${file("helm/${local.external_dns_standard.Feature}.yaml")}"]
+  values                      = ["${file("manifest/${local.external_dns_standard.Feature}.yaml")}"]
   helm_sets = [
     {
       name  = "provider"
@@ -414,19 +414,44 @@ module "external-dns" {
 
 ## Nginx Ingress Controller
 ## Nginx Ingress Controller is an Ingress controller that manages external access to HTTP services in a Kubernetes cluster using Nginx.
-module "helm_nginx" {
+module "ingress_nginx" {
   source           = "../../modules/cicd/helm"
   region           = var.region
   standard         = local.ingress_nginx_standard
   repository       = "https://kubernetes.github.io/ingress-nginx"
   chart            = "ingress-nginx"
-  values           = ["${file("helm/${local.ingress_nginx_standard.Feature}.yaml")}"]
+  values           = ["${file("manifest/${local.ingress_nginx_standard.Feature}.yaml")}"]
   namespace        = "ingress"
   create_namespace = true
   project_id       = data.google_project.curent.project_id
   dns_name         = trimsuffix(module.dns_main.dns_name, ".")
   depends_on = [
     module.gke_main,
-    module.external-dns
+    module.external_dns
   ]
 }
+
+## Cert Manager
+## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
+module "cert_manager" {
+  source            = "../../modules/cicd/helm"
+  region            = var.region
+  standard          = local.cert_manager_standard
+  repository        = "https://charts.jetstack.io"
+  chart             = "cert-manager"
+  project_id        = data.google_project.curent.project_id
+  values            = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+  namespace         = "cert-manager"
+  create_namespace  = true
+  depends_on = [
+    module.gke_main
+  ]
+}
+## Create Cluster Issuer for Cert Manager
+resource "kubectl_manifest" "manifests" {
+  yaml_body = templatefile("manifest/cluster-issuer.yaml", {
+    unit                 = var.unit
+  })
+  depends_on = [module.cert_manager]
+}
+
