@@ -17,6 +17,26 @@ variable "env" {
 # Terraform vars config
 
 ## Config
+### Github
+variable "github_owner" {
+  type        = string
+  description = "Github owner"
+}
+
+variable "github_orgs" {
+  type        = string
+  description = "Github organization"
+}
+
+variable "github_repo" {
+  type        = string
+  description = "Github repository"
+}
+
+variable "github_oauth_client_id" {
+  type        = string
+  description = "Github OAuth client ID for ArgoCD"
+}
 
 ### Atlantis
 
@@ -30,20 +50,15 @@ variable "atlantis_user" {
   description = "Atlantis username"
 }
 
-### Github
-variable "github_owner" {
+### ArgoCD
+variable "argocd_version" {
   type        = string
-  description = "Github owner"
+  description = "ArgoCD version"
 }
 
-variable "github_repo" {
+variable "argocd_vault_plugin_version" {
   type        = string
-  description = "Github repository"
-}
-
-variable "github_oauth_client_id" {
-  type        = string
-  description = "Github OAuth client ID for ArgoCD"
+  description = "ArgoCD Vault plugin version"
 }
 
 ### Secret Chipertext from terraform.tfvars

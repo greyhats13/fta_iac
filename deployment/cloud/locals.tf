@@ -55,6 +55,7 @@ locals {
       "atlantis_password"      = random_password.atlantis_password.result
       "atlantis_github_secret" = random_password.atlantis_github_secret.result
       "argocd_github_secret"   = random_password.argocd_github_secret.result
+      "argocd_ssh_base64"      = base64encode(tls_private_key.argocd_ssh.private_key_pem)
     }
   )
 

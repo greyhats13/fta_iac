@@ -88,45 +88,6 @@ module "repo_iac" {
   }
 }
 
-## Provisioning the Github repository for fta_gitops
-module "repo_gitops" {
-  source                 = "../../modules/cicd/github_repo"
-  standard               = local.repo_gitops_standard
-  visibility             = "public"
-  has_issues             = true
-  has_discussions        = true
-  has_projects           = true
-  has_wiki               = true
-  delete_branch_on_merge = true
-  auto_init              = true
-  license_template       = "apache-2.0"
-  security_and_analysis = {
-    advanced_security = {
-      status = "enabled"
-    }
-    secret_scanning = {
-      status = "enabled"
-    }
-    secret_scanning_push_protection = {
-      status = "enabled"
-    }
-  }
-  topics               = ["gitops", "helm", "devops", "argocd", "argocd-vault-plugin", "kubernetes"]
-  vulnerability_alerts = true
-  webhooks = {
-    argocd = {
-      configuration = {
-        url          = "https://argocd.fta.blast.co.id/api/webhook"
-        content_type = "json"
-        insecure_ssl = false
-        secret       = jsondecode(module.gsm_iac.secret_data)["argocd_github_secret"]
-      }
-      active = true
-      events = ["push"]
-    }
-  }
-}
-
 module "dns_main" {
   source        = "../../modules/gcp/dns"
   region        = var.region
@@ -231,7 +192,7 @@ module "gce_atlantis" {
   project_id           = data.google_project.curent.project_id
   service_account_role = "roles/owner"
   linux_user           = var.atlantis_user
-  public_key_openssh   = tls_private_key.atlantis_ssh.public_key_openssh
+  public_key_openssh   = data.tls_public_key.atlantis_public_key.public_key_openssh
   private_key_pem      = base64decode(jsondecode(module.gsm_iac.secret_data)["atlantis_ssh_base64"])
   machine_type         = "e2-medium"
   disk_size            = 20
@@ -494,41 +455,85 @@ resource "kubectl_manifest" "cluster_issuer" {
   depends_on = [module.cert_manager]
 }
 
-# ## ArgoCD
-# ## ArgoCD is a declarative, GitOps continuous delivery tool for Kubernetes.
-# module "helm_argocd" {
-#   source                      = "../../modules/cicd/helm"
-#   region                      = var.region
-#   standard                    = local.argodcd_standard
-#   repository                  = "https://argoproj.github.io/argo-helm"
-#   chart                       = "argo-cd"
-#   values                      = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
-#   namespace                   = "cd"
-#   create_namespace            = true
-#   create_service_account      = true
-#   use_workload_identity       = true
-#   project_id                  = data.google_project.curent.project_id
-#   google_service_account_role = ["roles/container.admin", "roles/secretmanager.secretAccessor"]
-#   dns_name                    = trimsuffix(module.dns_blast.dns_name, ".")
-#   extra_vars = {
-#     github_orgs      = var.github_owner
-#     github_client_id = var.github_oauth_client_id
-#     AVP_VERSION      = "1.18.1" // ArgoCD Vault Plugin version
-#   }
-#   helm_sets_sensitive = [
-#     {
-#       name  = "configs.secret.githubSecret"
-#       value = jsondecode(module.gsm_iac.secret_data)["github-secret"]
-#     },
-#     {
-#       name  = "configs.secret.extra.dex\\.github\\.clientSecret"
-#       value = jsondecode(module.gsm_iac.secret_data)["github_oauth_client_secret"]
-#     },
-#   ]
-#   depends_on = [
-#     module.gke_main,
-#     module.external-dns,
-#     module.helm_nginx,
-#     kubectl_manifest.cluster_issuer
-#   ]
-# }
+## ArgoCD
+## ArgoCD is a declarative, GitOps continuous delivery tool for Kubernetes.
+module "argocd" {
+  source                      = "../../modules/cicd/helm"
+  region                      = var.region
+  standard                    = local.argodcd_standard
+  repository                  = "https://argoproj.github.io/argo-helm"
+  chart                       = "argo-cd"
+  values                      = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+  namespace                   = "argocd"
+  create_namespace            = true
+  create_service_account      = true
+  use_workload_identity       = true
+  project_id                  = data.google_project.curent.project_id
+  google_service_account_role = ["roles/container.admin", "roles/secretmanager.secretAccessor"]
+  dns_name                    = trimsuffix(module.dns_main.dns_name, ".")
+  extra_vars = {
+    github_orgs      = var.github_orgs
+    github_client_id = var.github_oauth_client_id
+    ARGOCD_VERSION   = var.argocd_version
+    AVP_VERSION      = var.argocd_vault_plugin_version
+  }
+  helm_sets_sensitive = [
+    {
+      name  = "configs.secret.githubSecret"
+      value = jsondecode(module.gsm_iac.secret_data)["argocd_github_secret"]
+    },
+    {
+      name  = "configs.secret.extra.dex\\.github\\.clientSecret"
+      value = jsondecode(module.gsm_iac.secret_data)["github_oauth_client_secret"]
+    },
+  ]
+  depends_on = [
+    module.gke_main,
+    module.external_dns,
+    module.ingress_nginx,
+    kubectl_manifest.cluster_issuer
+  ]
+}
+
+## Provisioning the Github repository for fta_gitops
+module "repo_gitops" {
+  source                 = "../../modules/cicd/github_repo"
+  standard               = local.repo_gitops_standard
+  visibility             = "public"
+  has_issues             = true
+  has_discussions        = true
+  has_projects           = true
+  has_wiki               = true
+  delete_branch_on_merge = true
+  auto_init              = true
+  license_template       = "apache-2.0"
+  security_and_analysis = {
+    advanced_security = {
+      status = "enabled"
+    }
+    secret_scanning = {
+      status = "enabled"
+    }
+    secret_scanning_push_protection = {
+      status = "enabled"
+    }
+  }
+  topics               = ["gitops", "helm", "devops", "argocd", "argocd-vault-plugin", "kubernetes"]
+  vulnerability_alerts = true
+  webhooks = {
+    argocd = {
+      configuration = {
+        url          = "https://argocd.fta.blast.co.id/api/webhook"
+        content_type = "json"
+        insecure_ssl = false
+        secret       = jsondecode(module.gsm_iac.secret_data)["argocd_github_secret"]
+      }
+      active = true
+      events = ["push"]
+    }
+  }
+  public_key              = data.tls_public_key.argocd_public_key.public_key_openssh
+  ssh_key                 = base64decode(jsondecode(module.gsm_iac.secret_data)["argocd_ssh_base64"])
+  is_deploy_key_read_only = false
+  argocd_namespace        = module.argocd.k8s_ns_name
+}

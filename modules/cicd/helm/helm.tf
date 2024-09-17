@@ -28,7 +28,6 @@ resource "helm_release" "helm" {
         code                       = var.standard.Code
         env                        = var.standard.Env
         feature                    = var.standard.Feature
-        sub                        = try(var.standard.Sub, null)
         dns_name                   = var.dns_name
         service_account_annotation = var.create_service_account ? google_service_account.gsa[0].email : null
         extra_vars                 = var.extra_vars
