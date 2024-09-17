@@ -4,7 +4,7 @@ global:
 
 configs:
   cm:
-    url: "https://${feature}.${env}.${dns_name}"
+    url: "https://${feature}.${dns_name}"
     dex.config: |
       connectors:
         - type: github
@@ -13,7 +13,7 @@ configs:
           config:
             clientID: ${extra_vars.github_client_id}
             clientSecret: $argocd-secret:dex.github.clientSecret
-            redirectURI: 'https://${feature}.${env}.${dns_name}/api/dex/callback'
+            redirectURI: 'https://${feature}.${dns_name}/api/dex/callback'
             orgs:
               - name: ${extra_vars.github_orgs}
   params:
@@ -104,19 +104,19 @@ server:
   ingress:
     enabled: true
     hosts:
-      - "${feature}.${env}.${dns_name}"
+      - "${feature}.${dns_name}"
     annotations:
       # nginx.ingress.kubernetes.io/ssl-passthrough: "true"
       # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-      external-dns.alpha.kubernetes.io/hostname: "${feature}.${env}.${dns_name}"
+      external-dns.alpha.kubernetes.io/hostname: "${feature}.${dns_name}"
       external-dns.alpha.kubernetes.io/ttl: "300"
       kubernetes.io/tls-acme: "true"
-      cert-manager.io/cluster-issuer: "letsencrypt-${unit}-${env}"
+      cert-manager.io/cluster-issuer: "letsencrypt-${unit}"
     ingressClassName: "nginx"
     tls:
       - secretName: "${unit}-${feature}-server-tls"
         hosts:
-          - "${feature}.${env}.${dns_name}"
+          - "${feature}.${dns_name}"
     # http: false
 
 # ref: https://github.com/argoproj-labs/argocd-vault-plugin/blob/main/manifests/cmp-sidecar/argocd-repo-server.yaml
@@ -155,7 +155,7 @@ repoServer:
       # argocd-vault-plugin with Helm
     - name: avp-helm
       command: [/var/run/argocd/argocd-cmp-server]
-      image: quay.io/argoproj/argocd:v2.7.9
+      image: quay.io/argoproj/argocd:${extra_vars.ARGOCD_VERSION}
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
