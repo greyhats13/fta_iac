@@ -532,8 +532,8 @@ module "repo_gitops" {
       events = ["push"]
     }
   }
-  # public_key              = data.tls_public_key.argocd_public_key.public_key_openssh
-  # ssh_key                 = base64decode(jsondecode(module.gsm_iac.secret_data)["argocd_ssh_base64"])
-  # is_deploy_key_read_only = false
-  # argocd_namespace        = module.argocd.k8s_ns_name
+  public_key              = data.tls_public_key.argocd_public_key.public_key_openssh
+  ssh_key                 = base64decode(jsondecode(module.gsm_iac.secret_data)["argocd_ssh_base64"])
+  is_deploy_key_read_only = false
+  argocd_namespace        = module.argocd.k8s_ns_name
 }
