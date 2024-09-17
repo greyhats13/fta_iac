@@ -227,8 +227,8 @@ module "gce_atlantis" {
   ansible_tags      = ["setup_kubectl"]
   ansible_skip_tags = []
   ansible_vars = {
-    project_id = data.google_project.curent.project_id
-    # cluster_name      = module.gke_main.cluster_name
+    project_id              = data.google_project.curent.project_id
+    cluster_name            = module.gke_main.cluster_name
     region                  = "${var.region}-a"
     github_orgs             = var.github_owner
     atlantis_version        = var.atlantis_version
