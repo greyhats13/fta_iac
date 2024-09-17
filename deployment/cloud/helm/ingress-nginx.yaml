@@ -15,4 +15,4 @@ controller:
   ingressClass: nginx
   service:
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: ${unit}.${dns_name}
+      external-dns.alpha.kubernetes.io/hostname: ${dns_name}
