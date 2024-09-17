@@ -11,9 +11,6 @@ terraform {
   }
 }
 
-# Configure the GitHub Provider
-provider "github" {}
-
 # Configure the Google Cloud provider for Terraform
 provider "google" {
   project = "${var.unit}-platform"
