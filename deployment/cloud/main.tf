@@ -503,7 +503,7 @@ module "argocd" {
   repository                  = "https://argoproj.github.io/argo-helm"
   chart                       = "argo-cd"
   values                      = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
-  namespace                   = "cd"
+  namespace                   = "argocd"
   create_namespace            = true
   create_service_account      = true
   use_workload_identity       = true
