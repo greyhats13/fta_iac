@@ -88,6 +88,11 @@ variable "access_config" {
   description = "Configuration for accessing the instances, including public IP assignment."
 }
 
+variable "manage_ansible_file" {
+  type        = bool
+  description = "Flag to control whether to manage the ansible_vars.json and id_rsa.pem file."
+}
+
 variable "run_ansible" {
   type        = bool
   description = "Flag to control whether to run the Ansible playbook as part of the provisioning process."

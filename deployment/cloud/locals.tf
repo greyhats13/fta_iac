@@ -103,4 +103,11 @@ locals {
     Code    = "helm"
     Feature = "external-dns"
   }
+  ## Ingress Nginx Standard
+  ingress_nginx_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "helm"
+    Feature = "ingress-nginx"
+  }
 }

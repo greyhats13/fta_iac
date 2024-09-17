@@ -1,11 +1,15 @@
 terraform {
+  backend "gcs" {
+    bucket = "fta-mstr-gcs-tfstate"
+    prefix = "fta/cloud/deployment"
+  }
   required_providers {
     github = {
       source  = "integrations/github"
       version = "~> 6.0"
     }
     kubectl = {
-      source = "gavinbunney/kubectl"
+      source  = "gavinbunney/kubectl"
       version = "1.14.0"
     }
   }

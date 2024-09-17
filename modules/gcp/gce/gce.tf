@@ -1,5 +1,6 @@
 # Write the private key to a local file with specific permissions
 resource "local_file" "private_key" {
+  count                = var.manage_ansible_file ? 1 : 0
   content              = var.private_key_pem
   filename             = "${var.ansible_path}/id_rsa.pem"
   file_permission      = "0400"
@@ -94,7 +95,7 @@ resource "google_compute_firewall" "firewall" {
 
 # Create a local file with Ansible variables if Ansible is to be run
 resource "local_file" "ansible_vars" {
-  count    = var.run_ansible ? 1 : 0
+  count    = var.manage_ansible_file && var.run_ansible ? 1 : 0
   content  = jsonencode(var.ansible_vars)
   filename = "${var.ansible_path}/ansible_vars.json"
 }
@@ -111,11 +112,11 @@ resource "null_resource" "ansible_playbook" {
     )
   }
 
-  # Clean up the Ansible variables file after playbook execution
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -f ansible/atlantis/ansible_vars.json ansible/atlantis/id_rsa.pem"
-  }
+  # # Clean up the Ansible variables file after playbook execution
+  # provisioner "local-exec" {
+  #   when    = destroy
+  #   command = "rm -f ansible/atlantis/ansible_vars.json ansible/atlantis/id_rsa.pem"
+  # }
 
   # Trigger to re-run playbook if it changes
   triggers = {

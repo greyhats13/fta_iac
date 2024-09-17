@@ -21,7 +21,7 @@ resource "helm_release" "helm" {
   version             = var.helm_version
   values = length(var.values) > 0 ? sensitive([
     "${templatefile(
-      "helm/${try(var.standard.Sub, var.standard.Feature)}.yaml",
+      "helm/${var.standard.Feature}.yaml",
       {
         service_account_name       = local.sa_naming_standard
         unit                       = var.standard.Unit

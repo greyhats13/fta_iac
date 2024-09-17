@@ -1,11 +1,3 @@
-# Backend configuration
-terraform {
-  backend "gcs" {
-    bucket = "fta-mstr-gcs-tfstate"
-    prefix = "fta/cloud/deployment"
-  }
-}
-
 module "gcp_project" {
   source     = "../../modules/gcp/project-service"
   project_id = data.google_project.curent.project_id
@@ -221,10 +213,11 @@ module "gce_atlantis" {
     record_type   = "A"
     ttl           = 300
   }
-  run_ansible       = true
-  ansible_path      = "ansible/atlantis"
-  ansible_tags      = ["setup_kubectl"]
-  ansible_skip_tags = []
+  manage_ansible_file = false
+  run_ansible         = false
+  ansible_path        = "ansible/atlantis"
+  ansible_tags        = ["setup_kubectl"]
+  ansible_skip_tags   = []
   ansible_vars = {
     project_id              = data.google_project.curent.project_id
     cluster_name            = module.gke_main.cluster_name
@@ -393,7 +386,7 @@ module "external-dns" {
   project_id                  = data.google_project.curent.project_id
   google_service_account_role = ["roles/dns.admin"]
   create_managed_certificate  = false
-  values                      = ["${file("helm/external-dns.yaml")}"]
+  values                      = ["${file("helm/${local.external_dns_standard.Feature}.yaml")}"]
   helm_sets = [
     {
       name  = "provider"
@@ -416,5 +409,24 @@ module "external-dns" {
   create_namespace = true
   depends_on = [
     module.gke_main
+  ]
+}
+
+## Nginx Ingress Controller
+## Nginx Ingress Controller is an Ingress controller that manages external access to HTTP services in a Kubernetes cluster using Nginx.
+module "helm_nginx" {
+  source           = "../../modules/cicd/helm"
+  region           = var.region
+  standard         = local.ingress_nginx_standard
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  values           = ["${file("helm/${local.ingress_nginx_standard.Feature}.yaml")}"]
+  namespace        = "ingress"
+  create_namespace = true
+  project_id       = data.google_project.curent.project_id
+  dns_name         = trimsuffix(module.dns_main.dns_name, ".")
+  depends_on = [
+    module.gke_main,
+    module.external-dns
   ]
 }
