@@ -29,3 +29,8 @@ resource "random_password" "argocd_github_secret" {
   min_numeric      = 10
   min_special      = 5
 }
+
+resource "tls_private_key" "argocd_ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
