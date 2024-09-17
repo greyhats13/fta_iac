@@ -56,7 +56,6 @@ module "gsm_iac" {
   secret_data = local.iac_secrets_merged_json // Save the merged secret to the Secret Manager (see locals.tf)
 }
 
-
 # Provision the GitHub repository for the fta_iac
 module "repo_iac" {
   source                 = "../../modules/cicd/github_repo"
@@ -377,4 +376,45 @@ module "gke_main" {
     auto_repair  = true
     auto_upgrade = true
   }
+}
+
+# Kubernetes Addons
+
+## External DNS
+## External DNS is a Kubernetes addon that configures public DNS servers with information about exposed services to make them discoverable.
+module "external-dns" {
+  source                      = "../../modules/cicd/helm"
+  region                      = var.region
+  standard                    = local.external_dns_standard
+  repository                  = "https://charts.bitnami.com/bitnami"
+  chart                       = "external-dns"
+  create_service_account      = true
+  use_workload_identity       = true
+  project_id                  = data.google_project.curent.project_id
+  google_service_account_role = ["roles/dns.admin"]
+  create_managed_certificate  = false
+  values                      = ["${file("helm/external-dns.yaml")}"]
+  helm_sets = [
+    {
+      name  = "provider"
+      value = "google"
+    },
+    {
+      name  = "google.project"
+      value = data.google_project.curent.project_id
+    },
+    {
+      name  = "policy"
+      value = "sync"
+    },
+    {
+      name  = "zoneVisibility"
+      value = module.dns_main.dns_zone_visibility
+    }
+  ]
+  namespace        = "dns"
+  create_namespace = true
+  depends_on = [
+    module.gke_main
+  ]
 }
