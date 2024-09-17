@@ -1,5 +1,6 @@
 locals {
-  # GCS Standard
+  # Cloud Infrastructure Naming Standard
+  ## GCS Standard
   gcs_standard = {
     Unit    = var.unit
     Env     = var.env
@@ -8,7 +9,7 @@ locals {
   }
   gcs_naming_standard = "${local.gcs_standard.Unit}-${local.gcs_standard.Env}-${local.gcs_standard.Code}-${local.gcs_standard.Feature}"
 
-  # VPC Standard
+  ## VPC Standard
   vpc_standard = {
     Unit    = var.unit
     Env     = var.env
@@ -17,7 +18,7 @@ locals {
   }
   vpc_naming_standard = "${local.vpc_standard.Unit}-${local.vpc_standard.Env}-${local.vpc_standard.Code}-${local.vpc_standard.Feature}"
 
-  # KMS Standard
+  ## Cloud KMS Standard
   kms_standard = {
     Unit    = var.unit
     Env     = var.env
@@ -26,7 +27,7 @@ locals {
   }
   kms_naming_standard = "${local.kms_standard.Unit}-${local.kms_standard.Env}-${local.kms_standard.Code}-${local.kms_standard.Feature}"
 
-  # DNS Standard
+  ## Cloud DNS Standard
   dns_standard = {
     Unit    = var.unit
     Env     = var.env
@@ -35,7 +36,7 @@ locals {
   }
   dns_naming_standard = "${local.dns_standard.Unit}-${local.dns_standard.Env}-${local.dns_standard.Code}-${local.dns_standard.Feature}"
 
-  # Secret Manager Standard
+  # Google Secret Manager Standard
   gsm_standard = {
     Unit    = var.unit
     Env     = var.env
@@ -44,9 +45,9 @@ locals {
   }
   gsm_naming_standard = "${local.gsm_standard.Unit}-${local.gsm_standard.Env}-${local.gsm_standard.Code}-${local.gsm_standard.Feature}"
 
-  ## Convert decrypted secrets from terraform.tfvars to a map (see data.tf)
+  ### Convert decrypted secrets from terraform.tfvars to a map (see data.tf)
   iac_secret_map = { for k, v in data.google_kms_secret.iac_secrets : k => v.plaintext }
-  ## Merge the decrypted secrets with the generated secrets (see secret_generator.tf)
+  ### Merge the decrypted secrets with the generated secrets (see secret_generator.tf)
   iac_secret_merged = merge(
     local.iac_secret_map,
     {
@@ -56,11 +57,11 @@ locals {
     }
   )
 
-  ## Convert the merged secrets to a json for the Secret Manager
+  ### Convert the merged secrets to a json for the Secret Manager
   iac_secrets_merged_json = jsonencode(local.iac_secret_merged)
 
-  # Github Repository Standard
-  ## Repository for fta_iac
+  ## Github Repository Standard
+  ### Repository for fta_iac
   repo_iac_standard = {
     Unit    = var.unit
     Env     = var.env
@@ -93,4 +94,13 @@ locals {
     Feature = "main"
   }
   gke_naming_standard = "${local.gke_standard.Unit}-${local.gke_standard.Env}-${local.gke_standard.Code}-${local.gke_standard.Feature}"
+
+  # Kubernetes Addons Standard
+  ## External DNS Standard
+  external_dns_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "helm"
+    Feature = "external-dns"
+  }
 }

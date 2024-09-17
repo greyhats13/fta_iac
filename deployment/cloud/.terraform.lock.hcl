@@ -1,20 +1,20 @@
 # This file is maintained automatically by "terraform init".
 # Manual edits may be lost in future updates.
 
-provider "registry.terraform.io/alon-dotan-starkware/kubectl" {
-  version     = "1.11.2"
-  constraints = "1.11.2"
+provider "registry.terraform.io/gavinbunney/kubectl" {
+  version     = "1.14.0"
+  constraints = "1.14.0"
   hashes = [
-    "h1:INdACoeJGu45qWt8KcXVT04VMa/GrOYq/tIkGjKfzl8=",
-    "zh:1d576cb8f3012325b45216b0a3577f99181e63bc821fbec2cb3ae60d96347c04",
-    "zh:411144481cffa1db5bfff55cc47c267bcfe299baf649b405891deafd6fb1b43f",
-    "zh:5545b2ca2ba96d8161df4a53eb151e38fc6040b4c9400109bd8a740dcf53ed23",
-    "zh:5db6556fc145d49d2c7f35272dad31c91e00b870a99a23b6a32a76f098e0c36f",
-    "zh:731dccaa7dcb2f32b20896b43da904c144f653027e02f750b823172cf428f951",
-    "zh:89a74cf03ed2b44e33d2804ca9c33c0bb765ce1da17d14d43e97d0380d5f25f8",
-    "zh:a1b7ff674e901a6badd1506ad88f9daa2c8f1d4126a104b5f45b4a23f85fff8e",
-    "zh:b40c07a838f0bda87e5762f8fe00dffca1cb17472e25bd9208d06671c78c16b1",
-    "zh:e9d2b65bf95c2fd0f6a985eca82d2aab7702cd9062ac74e22a50c552fd3ba7df",
+    "h1:ItrWfCZMzM2JmvDncihBMalNLutsAk7kyyxVRaipftY=",
+    "zh:0350f3122ff711984bbc36f6093c1fe19043173fad5a904bce27f86afe3cc858",
+    "zh:07ca36c7aa7533e8325b38232c77c04d6ef1081cb0bac9d56e8ccd51f12f2030",
+    "zh:0c351afd91d9e994a71fe64bbd1662d0024006b3493bb61d46c23ea3e42a7cf5",
+    "zh:39f1a0aa1d589a7e815b62b5aa11041040903b061672c4cfc7de38622866cbc4",
+    "zh:428d3a321043b78e23c91a8d641f2d08d6b97f74c195c654f04d2c455e017de5",
+    "zh:4baf5b1de2dfe9968cc0f57fd4be5a741deb5b34ee0989519267697af5f3eee5",
+    "zh:6131a927f9dffa014ab5ca5364ac965fe9b19830d2bbf916a5b2865b956fdfcf",
+    "zh:c62e0c9fd052cbf68c5c2612af4f6408c61c7e37b615dc347918d2442dd05e93",
+    "zh:f0beffd7ce78f49ead612e4b1aefb7cb6a461d040428f514f4f9cc4e5698ac65",
   ]
 }
 
