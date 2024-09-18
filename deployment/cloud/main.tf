@@ -260,51 +260,51 @@ module "gce_atlantis" {
 }
 
 ## Provisioning the Cloud SQL instance using the Cloud SQL module
-module "cloudsql_instance_main" {
-  source                 = "../../modules/gcp/cloudsql"
-  region                 = var.region
-  project_id             = data.google_project.curent.project_id
-  standard               = local.cloudsql_standard
-  name                   = local.cloudsql_naming_standard
-  vpc_id                 = module.vpc_main.vpc_id
-  global_address_purpose = "VPC_PEERING"
-  global_address_type    = "INTERNAL"
-  prefix_length          = 16
-  service_name           = "servicenetworking.googleapis.com"
-  database_version       = "POSTGRES_15"
-  settings = {
-    tier                = "db-f1-micro" # Choose an appropriate machine type
-    availability_type   = "ZONAL"       # "ZONAL" or "REGIONAL"
-    disk_type           = "PD_SSD"      # "PD_SSD" or "PD_HDD"
-    disk_size           = 10            # Disk size in GB
-    activation_policy   = "ALWAYS"      # "ALWAYS", "NEVER", "ON_DEMAND"
-    deletion_protection = false         # Set to true to prevent accidental deletion
+# module "cloudsql_instance_main" {
+#   source                 = "../../modules/gcp/cloudsql"
+#   region                 = var.region
+#   project_id             = data.google_project.curent.project_id
+#   standard               = local.cloudsql_standard
+#   name                   = local.cloudsql_naming_standard
+#   vpc_id                 = module.vpc_main.vpc_id
+#   global_address_purpose = "VPC_PEERING"
+#   global_address_type    = "INTERNAL"
+#   prefix_length          = 16
+#   service_name           = "servicenetworking.googleapis.com"
+#   database_version       = "POSTGRES_15"
+#   settings = {
+#     tier                = "db-f1-micro" # Choose an appropriate machine type
+#     availability_type   = "ZONAL"       # "ZONAL" or "REGIONAL"
+#     disk_type           = "PD_SSD"      # "PD_SSD" or "PD_HDD"
+#     disk_size           = 10            # Disk size in GB
+#     activation_policy   = "ALWAYS"      # "ALWAYS", "NEVER", "ON_DEMAND"
+#     deletion_protection = false         # Set to true to prevent accidental deletion
 
-    backup_configuration = {
-      enabled                        = true
-      start_time                     = "03:00" # Time in UTC
-      location                       = var.region
-      point_in_time_recovery_enabled = true
-    }
+#     backup_configuration = {
+#       enabled                        = true
+#       start_time                     = "03:00" # Time in UTC
+#       location                       = var.region
+#       point_in_time_recovery_enabled = true
+#     }
 
-    maintenance_window = {
-      day          = 7        # 1 (Sunday) to 7 (Saturday)
-      hour         = 3        # 0 to 23
-      update_track = "stable" # "canary" or "stable"
-    }
+#     maintenance_window = {
+#       day          = 7        # 1 (Sunday) to 7 (Saturday)
+#       hour         = 3        # 0 to 23
+#       update_track = "stable" # "canary" or "stable"
+#     }
 
-    ip_configuration = {
-      ipv4_enabled                                  = false
-      private_network                               = module.vpc_main.vpc_self_link
-      ssl_mode                                      = "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
-      enable_private_path_for_google_cloud_services = true
-      authorized_networks                           = [] # Empty list since it's private
-    }
+#     ip_configuration = {
+#       ipv4_enabled                                  = false
+#       private_network                               = module.vpc_main.vpc_self_link
+#       ssl_mode                                      = "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
+#       enable_private_path_for_google_cloud_services = true
+#       authorized_networks                           = [] # Empty list since it's private
+#     }
 
-    database_flags = [] # Add any database flags if needed
-  }
-  depends_on = [module.gcp_project, module.vpc_main]
-}
+#     database_flags = [] # Add any database flags if needed
+#   }
+#   depends_on = [module.gcp_project, module.vpc_main]
+# }
 
 # Provisioning the GKE cluster using the GKE module
 module "gke_main" {
