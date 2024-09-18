@@ -13,9 +13,9 @@ locals {
     docker_repository_uri = "greyhats13/${local.svc_name}"
     gitops_repo_name      = data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_fullname
     repo_gitops_ssh       = data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_ssh_clone_url
-    chart_path = var.env == "dev" ? "incubator/${local.svc_name}" : (
-      var.env == "stg" ? "test/${local.svc_name}" : "stable/${local.svc_name}"
-    )
+    gitops_path_dev       = "incubator/${local.svc_name}"
+    gitops_path_stg       = "test/${local.svc_name}"
+    gitops_path_prd       = "stable/${local.svc_name}"
   }
   ## Secrets that will be stored in Github repo environment for Github Actions
   github_action_secrets = merge(
@@ -25,7 +25,9 @@ locals {
 
   ## Secrets that will be stored in the Secret Manager
   app_secret = {
-    "username" = local.svc_name
-    "password" = random_password.password.result
+    "HOST"     = data.terraform_remote_state.cloud_deployment.outputs.cloudsql_instance_ip_address
+    "USERNAME" = local.svc_name
+    "PASSWORD" = random_password.password.result
+    "PORT"     = "5432"
   }
 }

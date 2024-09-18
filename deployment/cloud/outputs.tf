@@ -165,3 +165,7 @@ output "cloudsql_instance_connection_name" {
 output "cloudsql_instance_self_link" {
   value = module.cloudsql_instance_main.instance_self_link
 }
+
+output "cloudsql_instance_ip_address" {
+  value = module.cloudsql_instance_main.instance_ip_address
+}
