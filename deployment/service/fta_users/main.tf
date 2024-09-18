@@ -44,4 +44,11 @@ module "gsa" {
   ]
 }
 
+# module "gsm" {
+#   source      = "../../modules/gcp/secret-manager"
+#   region      = var.region
+#   standard    = local.svc_standard
+#   name        = local.svc_naming_standard
+#   secret_data = local.iac_secrets_merged_json // Save the merged secret to the Secret Manager (see locals.tf)
+# }
 

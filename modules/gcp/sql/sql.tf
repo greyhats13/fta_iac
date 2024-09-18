@@ -1,24 +1,26 @@
-resource "google_sql_database_instance" "postgres" {
-  name             = var.cloudsql_instance_name
-  database_version = var.db_version
-  region           = var.db_region != null ? var.db_region : var.region
+# # Create the Database
+# resource "random_password" "atlantis_password" {
+#   length           = 12
+#   override_special = "!#$%&*@"
+#   min_lower        = 3
+#   min_upper        = 3
+#   min_numeric      = 3
+#   min_special      = 0
+# }
 
-  settings {
-    tier = var.db_tier
+# resource "google_sql_database" "database" {
+#   name      = var.cloudsql_instance_name
+#   instance  = data.google_sql_database_instance.instance.name
+#   project   = var.project_id
+#   charset   = var.database_charset
+#   collation = var.database_collation
+# }
 
-    ip_configuration {
-      ipv4_enabled    = false
-      private_network = google_compute_network.vpc.id
-      require_ssl     = true
-    }
-
-    storage_auto_resize        = true
-    storage_auto_resize_limit  = var.db_storage
-    disk_size                  = var.db_storage
-    disk_type                  = "PD_SSD"
-
-    availability_type          = "REGIONAL"
-  }
-
-  project = var.project_id
-}
+# # Create the User
+# resource "google_sql_user" "user" {
+#   name     = var.database
+#   instance = data.google_sql_database_instance.instance.name
+#   project  = var.project_id
+#   password = var.password
+#   host     = var.host
+# }
