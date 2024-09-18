@@ -4,7 +4,7 @@ resource "google_compute_global_address" "private_service_ip" {
   purpose       = var.global_address_purpose
   address_type  = var.global_address_type
   network       = var.vpc_id
-  address       = var.allocated_ip_range
+  address       = var.address
   prefix_length = var.prefix_length
 }
 

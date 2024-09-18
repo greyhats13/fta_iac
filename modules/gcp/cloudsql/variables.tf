@@ -30,6 +30,12 @@ variable "global_address_type" {
   description = "The type of the global address."
 }
 
+variable "address" {
+  type        = string
+  description = "The IP address of the global address."
+  default     = null
+}
+
 variable "allocated_ip_range" {
   type        = string
   description = "The CIDR range to allocate for private service access. If null, prefix_length is used."
