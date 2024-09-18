@@ -161,13 +161,13 @@ output "gitops_repo_http_clone_url" {
 
 ## Cloud SQL Outputs
 output "cloudsql_instance_name" {
-  value = module.cloudsql_instance.instance_name
+  value = module.cloudsql_instance_main.instance_name
 }
 
 output "cloudsql_instance_connection_name" {
-  value = module.cloudsql_instance.instance_connection_name
+  value = module.cloudsql_instance_main.instance_connection_name
 }
 
 output "cloudsql_instance_self_link" {
-  value = module.cloudsql_instance.instance_self_link
+  value = module.cloudsql_instance_main.instance_self_link
 }
