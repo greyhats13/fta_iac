@@ -1,11 +1,29 @@
+# Reserve IP range for Private Service Access
+resource "google_compute_global_address" "private_service_ip" {
+  name          = "${var.name}-private-ip-address"
+  purpose       = var.global_address_purpose
+  address_type  = var.global_address_type
+  network       = var.vpc_id
+  address       = var.allocated_ip_range
+  prefix_length = var.prefix_length
+}
+
+# Create a Service Networking Connection
+# This connection allows private services to be accessed from other VPCs.
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = var.vpc_id
+  service                 = var.service_name
+  reserved_peering_ranges = [google_compute_global_address.private_service_ip.address]
+}
+
 # Create a Cloud SQL Instance
 resource "google_sql_database_instance" "instance" {
   name                = var.name
   project             = var.project_id
   region              = var.region
   database_version    = var.database_version
+  depends_on          = [google_service_networking_connection.private_vpc_connection]
   deletion_protection = var.settings.deletion_protection
-
   settings {
     tier              = var.settings.tier
     availability_type = var.settings.availability_type
@@ -30,9 +48,10 @@ resource "google_sql_database_instance" "instance" {
 
     # IP Configuration
     ip_configuration {
-      ipv4_enabled    = var.settings.ip_configuration.ipv4_enabled
-      private_network = var.settings.ip_configuration.private_network
-      ssl_mode       = var.settings.ip_configuration.ssl_mode
+      ipv4_enabled                                  = var.settings.ip_configuration.ipv4_enabled
+      private_network                               = var.settings.ip_configuration.private_network
+      ssl_mode                                      = var.settings.ip_configuration.ssl_mode
+      enable_private_path_for_google_cloud_services = var.settings.ip_configuration.enable_private_path_for_google_cloud_services
 
       dynamic "authorized_networks" {
         for_each = var.settings.ip_configuration.authorized_networks

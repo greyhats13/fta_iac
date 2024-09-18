@@ -3,14 +3,15 @@ module "gcp_project" {
   project_id = data.google_project.curent.project_id
   services = {
     # resource_manager = "cloudresourcemanager.googleapis.com",
-    iam            = "iam.googleapis.com",
-    gcs            = "storage.googleapis.com"
-    cloud_dns      = "dns.googleapis.com",
-    gce            = "compute.googleapis.com",
-    gke            = "container.googleapis.com",
-    secret_manager = "secretmanager.googleapis.com",
-    kms            = "cloudkms.googleapis.com",
-    sql            = "sqladmin.googleapis.com",
+    iam                = "iam.googleapis.com",
+    gcs                = "storage.googleapis.com"
+    cloud_dns          = "dns.googleapis.com",
+    gce                = "compute.googleapis.com",
+    gke                = "container.googleapis.com",
+    secret_manager     = "secretmanager.googleapis.com",
+    kms                = "cloudkms.googleapis.com",
+    sql                = "sqladmin.googleapis.com",
+    service_networking = "servicenetworking.googleapis.com"
   }
 }
 
@@ -260,13 +261,18 @@ module "gce_atlantis" {
 
 ## Provisioning the Cloud SQL instance using the Cloud SQL module
 module "cloudsql_instance_main" {
-  source           = "../../modules/gcp/cloudsql"
-  region           = var.region
-  project_id       = data.google_project.curent.project_id
-  standard         = local.cloudsql_standard
-  name             = local.cloudsql_naming_standard
-  database_version = "POSTGRES_15"
-
+  source                 = "../../modules/gcp/cloudsql"
+  region                 = var.region
+  project_id             = data.google_project.curent.project_id
+  standard               = local.cloudsql_standard
+  name                   = local.cloudsql_naming_standard
+  vpc_id                 = module.vpc_main.vpc_id
+  global_address_purpose = "VPC_PEERING"
+  global_address_type    = "INTERNAL"
+  allocated_ip_range     = null
+  prefix_length          = 16
+  service_name           = "servicenetworking.googleapis.com"
+  database_version       = "POSTGRES_15"
   settings = {
     tier                = "db-f1-micro" # Choose an appropriate machine type
     availability_type   = "ZONAL"       # "ZONAL" or "REGIONAL"
@@ -289,14 +295,16 @@ module "cloudsql_instance_main" {
     }
 
     ip_configuration = {
-      ipv4_enabled        = false
-      private_network     = module.vpc_main.vpc_self_link
-      ssl_mode            = "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
-      authorized_networks = [] # Empty list since it's private
+      ipv4_enabled                                  = false
+      private_network                               = module.vpc_main.vpc_self_link
+      ssl_mode                                      = "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
+      enable_private_path_for_google_cloud_services = true
+      authorized_networks                           = [] # Empty list since it's private
     }
 
     database_flags = [] # Add any database flags if needed
   }
+  depends_on = [module.gcp_project, module.vpc_main]
 }
 
 # Provisioning the GKE cluster using the GKE module

@@ -87,7 +87,6 @@ locals {
     Feature = "atlantis"
   }
   gce_atlantis_naming_standard = "${local.gce_atlantis_standard.Unit}-${local.gce_atlantis_standard.Env}-${local.gce_atlantis_standard.Code}-${local.gce_atlantis_standard.Feature}"
-
   ## Cloud SQL Standard
   cloudsql_standard = {
     Unit    = var.unit

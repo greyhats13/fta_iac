@@ -21,6 +21,12 @@ provider "google" {
   region  = var.region
 }
 
+provider "google-beta" {
+  alias   = "beta"
+  project = "${var.unit}-platform"
+  region  = var.region
+}
+
 provider "kubernetes" {
   config_path = "~/.kube/config"
 }
