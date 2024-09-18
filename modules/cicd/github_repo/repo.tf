@@ -1,5 +1,5 @@
 locals {
-  naming_standard   = var.standard.Code != "repo" ? "${var.standard.Unit}_${var.standard.Code}_${var.standard.Feature}" : "${var.standard.Unit}_${var.standard.Feature}"
+  naming_standard   = "${var.standard.Unit}_${var.standard.Feature}"
   create_repository = var.standard.Env == "dev" || var.standard.Env == "mstr" ? 1 : 0
   template = var.template != null ? {
     for template_key, template_value in var.template : template_key => template_value
