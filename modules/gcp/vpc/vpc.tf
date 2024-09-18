@@ -11,7 +11,7 @@ resource "google_compute_subnetwork" "subnet" {
   name = "${var.name}-subnet"
   ip_cidr_range = var.ip_cidr_range
   network = google_compute_network.vpc.self_link # Link to the VPC created above
-
+  private_ip_google_access = true
   dynamic "secondary_ip_range" {
     for_each = var.secondary_ip_range
     content {

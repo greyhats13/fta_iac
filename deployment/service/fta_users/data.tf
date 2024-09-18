@@ -1,4 +1,6 @@
 # Terraform state data kms cryptokey
+
+data "google_project" "curent" {}
 data "terraform_remote_state" "cloud_deployment" {
   backend = "gcs"
 

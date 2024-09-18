@@ -88,6 +88,14 @@ locals {
   }
   gce_atlantis_naming_standard = "${local.gce_atlantis_standard.Unit}-${local.gce_atlantis_standard.Env}-${local.gce_atlantis_standard.Code}-${local.gce_atlantis_standard.Feature}"
 
+  ## Cloud SQL Standard
+  cloudsql_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "cloudsql"
+    Feature = "main"
+  }
+  cloudsql_naming_standard = "${local.cloudsql_standard.Unit}-${local.cloudsql_standard.Env}-${local.cloudsql_standard.Code}-${local.cloudsql_standard.Feature}"
   ## Google Kubernetes Engine Standard
   gke_standard = {
     Unit    = var.unit

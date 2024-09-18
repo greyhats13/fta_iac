@@ -9,7 +9,7 @@ module "repo_users" {
   delete_branch_on_merge = false
   auto_init              = true
   gitignore_template     = "Node"
-  license_template = "apache-2.0"
+  license_template       = "apache-2.0"
   security_and_analysis = {
     advanced_security = {
       status = "enabled"
@@ -21,7 +21,27 @@ module "repo_users" {
       status = "enabled"
     }
   }
-  topics               = ["nodejs", "service", "docker", "postgresql", "gcp", "kubernetes"]
-  vulnerability_alerts = true
-  github_action_secrets = local.secret_merged
+  topics                  = ["nodejs", "service", "docker", "postgresql", "gcp", "kubernetes"]
+  vulnerability_alerts    = true
+  github_action_variables = local.github_action_variables
+  github_action_secrets   = local.secret_merged
 }
+
+module "gsa" {
+  source     = "../../../modules/gcp/gsa"
+  region     = var.region
+  standard   = local.svc_standard
+  name       = local.svc_naming_standard
+  project_id = data.google_project.curent.project_id
+  # roles to pull images from Artifact Registry and connect to Cloud SQL
+  roles = [
+    "roles/storage.objectViewer",
+    "roles/cloudsql.client",
+  ]
+  binding_roles = [
+    "roles/iam.workloadIdentityUser",
+    "roles/iam.serviceAccountTokenCreator",
+  ]
+}
+
+
