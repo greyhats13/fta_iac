@@ -70,7 +70,7 @@ module "sql" {
   standard      = local.svc_standard
   project_id    = data.google_project.current.project_id
   instance_name = data.terraform_remote_state.cloud_deployment.outputs.cloudsql_instance_name
-  database      = local.svc_name
+  database      = jsondecode(module.gsm.secret_data)["DATABASE"]
   username      = jsondecode(module.gsm.secret_data)["USERNAME"]
   password      = jsondecode(module.gsm.secret_data)["PASSWORD"]
 }

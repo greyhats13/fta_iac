@@ -25,9 +25,10 @@ locals {
 
   ## Secrets that will be stored in the Secret Manager
   app_secret = {
-    "HOST"     = data.terraform_remote_state.cloud_deployment.outputs.cloudsql_instance_ip_address
     "USERNAME" = local.svc_name
     "PASSWORD" = random_password.password.result
+    "DATABASE" = "${local.svc_name}_db_${var.env}"
+    "HOST"     = data.terraform_remote_state.cloud_deployment.outputs.cloudsql_instance_ip_address
     "PORT"     = "5432"
   }
 }
