@@ -21,5 +21,6 @@ locals {
     data.google_kms_secret.secrets,
     { "GITOPS_SSH_PRIVATE_KEY" = base64decode(jsondecode(data.terraform_remote_state.cloud_deployment.outputs.gsm_iac_secret_data)["argocd_ssh_base64"]) }
   )
+  
 }
 
