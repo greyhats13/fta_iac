@@ -98,12 +98,6 @@ output "security_service_account_email" {
   value = module.kms_main.service_account_email
 }
 
-# Outputs for Google Secret Manager Deployment
-output "gsm_iac_secret_data" {
-  value     = module.gsm_iac.secret_data
-  sensitive = true
-}
-
 # Outputs for the DNS Deployment
 # FTA zone
 output "main_dns_id" {

@@ -3,5 +3,5 @@
 # }
 
 output "k8s_ns_name" {
-  value = kubernetes_namespace.namespace[0].metadata[0].name
+  value = var.create_namespace ? kubernetes_namespace.namespace[0].metadata[0].name : null
 }
