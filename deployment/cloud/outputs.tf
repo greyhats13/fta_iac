@@ -133,6 +133,7 @@ output "main_dns_zone_visibility" {
 
 # Github Outputs
 
+## Repo IAC
 output "iac_repo_fullname" {
   value = flatten(module.repo_iac.*.full_name)[0]
 }
@@ -143,6 +144,19 @@ output "iac_repo_ssh_clone_url" {
 
 output "iac_repo_http_clone_url" {
   value = flatten(module.repo_iac.*.http_clone_url)[0]
+}
+
+## Repo Gitops
+output "gitops_repo_fullname" {
+  value = flatten(module.repo_gitops.*.full_name)[0]
+}
+
+output "gitops_repo_ssh_clone_url" {
+  value = flatten(module.repo_gitops.*.ssh_clone_url)[0]
+}
+
+output "gitops_repo_http_clone_url" {
+  value = flatten(module.repo_gitops.*.http_clone_url)[0]
 }
 
 

@@ -7,8 +7,8 @@ locals {
 }
 
 resource "github_repository" "repo" {
-  count                  = local.create_repository
-  name                   = local.naming_standard
+  count = local.create_repository
+  name  = local.naming_standard
   # description            = "This is the repository for ${local.naming_standard}"
   homepage_url           = var.homepage_url
   visibility             = var.visibility
@@ -195,9 +195,17 @@ resource "kubernetes_secret_v1" "argocd" {
 }
 
 resource "github_repository_environment" "environment" {
-  count       = length(var.github_action_secrets) > 0 ? 1 : 0
+  count       = length(var.github_action_secrets) > 0 || length(var.github_action_variables) > 0 ? 1 : 0
   environment = "${github_repository.repo[count.index].name}_${var.standard.Env}"
   repository  = github_repository.repo[count.index].name
+}
+
+resource "github_actions_environment_variable" "variable" {
+  for_each      = var.github_action_variables
+  repository    = github_repository.repo[0].name
+  environment   = github_repository_environment.environment[0].environment
+  variable_name = each.key
+  value         = each.value
 }
 
 resource "github_actions_environment_secret" "secret" {

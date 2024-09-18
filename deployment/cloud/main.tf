@@ -10,6 +10,7 @@ module "gcp_project" {
     gke            = "container.googleapis.com",
     secret_manager = "secretmanager.googleapis.com",
     kms            = "cloudkms.googleapis.com",
+    sql            = "sqladmin.googleapis.com",
   }
 }
 

@@ -2,7 +2,6 @@
 variable "region" {
   type        = string
   description = "GCP region"
-  default     = "asia-southeast2"
 }
 
 # Naming Standard
