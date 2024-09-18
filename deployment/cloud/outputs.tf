@@ -98,12 +98,6 @@ output "security_service_account_email" {
   value = module.kms_main.service_account_email
 }
 
-# Outputs for Google Secret Manager Deployment
-output "gsm_iac_secret_data" {
-  value     = module.gsm_iac.secret_data
-  sensitive = true
-}
-
 # Outputs for the DNS Deployment
 # FTA zone
 output "main_dns_id" {
@@ -170,4 +164,8 @@ output "cloudsql_instance_connection_name" {
 
 output "cloudsql_instance_self_link" {
   value = module.cloudsql_instance_main.instance_self_link
+}
+
+output "cloudsql_instance_ip_address" {
+  value = module.cloudsql_instance_main.instance_ip_address
 }

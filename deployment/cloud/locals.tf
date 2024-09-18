@@ -127,7 +127,7 @@ locals {
     Feature = "cert-manager"
   }
   ## Argo CD Standard
-  argodcd_standard = {
+  argocd_standard = {
     Unit    = var.unit
     Env     = var.env
     Code    = "helm"

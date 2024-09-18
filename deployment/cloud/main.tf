@@ -509,10 +509,10 @@ resource "kubectl_manifest" "cluster_issuer" {
 module "argocd" {
   source                      = "../../modules/cicd/helm"
   region                      = var.region
-  standard                    = local.argodcd_standard
+  standard                    = local.argocd_standard
   repository                  = "https://argoproj.github.io/argo-helm"
   chart                       = "argo-cd"
-  values                      = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+  values                      = ["${file("manifest/${local.argocd_standard.Feature}.yaml")}"]
   namespace                   = "argocd"
   create_namespace            = true
   create_service_account      = true
