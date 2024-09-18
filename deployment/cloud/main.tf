@@ -259,7 +259,7 @@ module "gce_atlantis" {
 }
 
 ## Provisioning the Cloud SQL instance using the Cloud SQL module
-module "cloudsql" {
+module "cloudsql_main" {
   source           = "../../modules/gcp/cloudsql"
   region           = var.region
   project_id       = data.google_project.curent.project_id
