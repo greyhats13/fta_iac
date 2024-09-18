@@ -1,5 +1,5 @@
 # Reserve IP range for Private Service Access
-resource "google_compute_global_address" "private_service_ip" {
+resource "google_compute_global_address" "private_ip_address" {
   name          = "${var.name}-private-ip-address"
   purpose       = var.global_address_purpose
   address_type  = var.global_address_type
@@ -12,7 +12,7 @@ resource "google_compute_global_address" "private_service_ip" {
 resource "google_service_networking_connection" "private_vpc_connection" {
   network                 = var.vpc_id
   service                 = var.service_name
-  reserved_peering_ranges = [google_compute_global_address.private_service_ip.address]
+  reserved_peering_ranges = [google_compute_global_address.private_service_ip.name]
 }
 
 # Create a Cloud SQL Instance
