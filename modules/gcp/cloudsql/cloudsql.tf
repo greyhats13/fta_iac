@@ -1,19 +1,19 @@
-# Reserve IP range for Private Service Access
-resource "google_compute_global_address" "private_ip_address" {
-  name          = "${var.name}-private-ip-address"
-  purpose       = var.global_address_purpose
-  address_type  = var.global_address_type
-  network       = var.vpc_id
-  prefix_length = var.prefix_length
-}
+# # Reserve IP range for Private Service Access
+# resource "google_compute_global_address" "private_ip_address" {
+#   name          = "${var.name}-private-ip-address"
+#   purpose       = var.global_address_purpose
+#   address_type  = var.global_address_type
+#   network       = var.vpc_id
+#   prefix_length = var.prefix_length
+# }
 
-# Create a Service Networking Connection
-# This connection allows private services to be accessed from other VPCs.
-resource "google_service_networking_connection" "private_vpc_connection" {
-  network                 = var.vpc_id
-  service                 = var.service_name
-  reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
-}
+# # Create a Service Networking Connection
+# # This connection allows private services to be accessed from other VPCs.
+# resource "google_service_networking_connection" "private_vpc_connection" {
+#   network                 = var.vpc_id
+#   service                 = var.service_name
+#   reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
+# }
 
 # Create a Cloud SQL Instance
 resource "google_sql_database_instance" "instance" {
@@ -21,7 +21,7 @@ resource "google_sql_database_instance" "instance" {
   project             = var.project_id
   region              = var.region
   database_version    = var.database_version
-  depends_on          = [google_service_networking_connection.private_vpc_connection]
+  # depends_on          = [google_service_networking_connection.private_vpc_connection]
   deletion_protection = var.settings.deletion_protection
   settings {
     tier              = var.settings.tier

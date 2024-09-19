@@ -196,7 +196,7 @@ resource "kubernetes_secret_v1" "argocd" {
 
 resource "github_repository_environment" "environment" {
   count       = length(var.github_action_secrets) > 0 || length(var.github_action_variables) > 0 ? 1 : 0
-  environment = "${github_repository.repo[count.index].name}_${var.standard.Env}"
+  environment = "${github_repository.repo[count.index].name}"
   repository  = github_repository.repo[count.index].name
 }
 
