@@ -1,4 +1,5 @@
 resource "google_artifact_registry_repository" "repo" {
+  count                  = var.standard.Env == "dev" ? 1 : 0
   location               = var.region
   repository_id          = var.repository_id
   description            = "This is the repository for ${var.repository_id} service"
@@ -14,7 +15,7 @@ resource "google_artifact_registry_repository" "repo" {
       action = policy.value.action
 
       dynamic "condition" {
-        for_each = policy.value.condition != null ? [policy.value.condition]: []
+        for_each = policy.value.condition != null ? [policy.value.condition] : []
         content {
           tag_state             = condition.value.tag_state
           tag_prefixes          = condition.value.tag_prefixes

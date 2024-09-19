@@ -4,6 +4,11 @@ variable "region" {
   description = "GCP region"
 }
 
+variable "standard" {
+  type        = map(string)
+  description = "The standard naming convention for resources."
+}
+
 # Artifact Registry arguments
 variable "repository_id" {
   type        = string

@@ -2,7 +2,7 @@
 ## Create a Github repository for the service
 ## Store the github action variables and secrets in the Github repository environment
 module "repo_users" {
-  source                 = "../../../../modules/cicd/github_repo"
+  source                 = "../../../modules/cicd/github_repo"
   standard               = local.svc_standard
   visibility             = "public"
   has_issues             = true
@@ -35,10 +35,10 @@ module "repo_users" {
 ## Assign the specified IAM role to the service account
 ## Bind the service account to the workload identity
 module "gsa" {
-  source     = "../../../../modules/gcp/gsa"
+  source     = "../../../modules/gcp/gsa"
   region     = var.region
   standard   = local.svc_standard
-  name       = local.svc_naming_standard
+  name       = local.svc_naming_full
   project_id = data.google_project.current.project_id
   # roles to pull images from Artifact Registry and connect to Cloud SQL
   roles = [
@@ -54,17 +54,17 @@ module "gsa" {
 # Secret Manager for application secrets
 ## Save the app secret in json format to the Secret Manager
 module "gsm" {
-  source      = "../../../../modules/gcp/secret-manager"
+  source      = "../../../modules/gcp/secret-manager"
   region      = var.region
   standard    = local.svc_standard
-  name        = local.svc_name_full
+  name        = local.svc_naming_full
   secret_data = jsonencode(local.app_secret) // Save the app secret in json format to the Secret Manager (see locals.tf)
 }
 
 # Cloud SQL for application database and user
 ## Create application database and user in Cloud SQL
 module "sql" {
-  source        = "../../../../modules/gcp/sql"
+  source        = "../../../modules/gcp/sql"
   region        = var.region
   standard      = local.svc_standard
   project_id    = data.google_project.current.project_id
@@ -77,8 +77,9 @@ module "sql" {
 # Artifact Registry for application container images
 ## Create a repository in Artifact Registry for the application
 module "artifact_registry" {
-  source                 = "../../../../modules/gcp/artifact-registry"
+  source                 = "../../../modules/gcp/artifact-registry"
   region                 = var.region
+  standard               = local.svc_standard
   repository_id          = local.svc_naming_standard
   repository_format      = "DOCKER"
   repository_mode        = "STANDARD_REPOSITORY"
@@ -113,7 +114,7 @@ module "artifact_registry" {
 # ArgoCD Application for application deployment
 ## Create an ArgoCD application for the application
 module "argocd_app" {
-  source        = "../../../../modules/cicd/helm"
+  source        = "../../../modules/cicd/helm"
   region        = var.region
   standard      = local.svc_standard
   repository    = "https://argoproj.github.io/argo-helm"

@@ -77,7 +77,6 @@ resource "github_repository" "repo" {
 
 locals {
   create_dev_branch = var.standard.Env == "dev" || var.standard.Env == "mstr" ? 1 : 0
-  create_stg_branch = (var.standard.Env == "dev" || var.standard.Env == "mstr") && (github_repository.repo[0].name == "ols_iac" || github_repository.repo[0].name == "ols_helm") ? 1 : 0
 }
 
 resource "github_branch" "dev" {
@@ -201,7 +200,7 @@ resource "github_repository_environment" "environment" {
 }
 
 resource "github_actions_environment_variable" "variable" {
-  for_each      = var.standard.Env != "dev" && var.standard.Env != "mstr"  ? var.github_action_variables : {}
+  for_each      = var.standard.Env == "dev" || var.standard.Env == "mstr"  ? var.github_action_variables : {}
   repository    = github_repository.repo[0].name
   environment   = github_repository_environment.environment[0].environment
   variable_name = each.key
@@ -209,7 +208,7 @@ resource "github_actions_environment_variable" "variable" {
 }
 
 resource "github_actions_environment_secret" "secret" {
-  for_each        = var.standard.Env != "dev" && var.standard.Env != "mstr" ? var.github_action_secrets : {}
+  for_each        = var.standard.Env == "dev" || var.standard.Env == "mstr" ? tomap(var.github_action_secrets) : {}
   repository      = github_repository.repo[0].name
   environment     = github_repository_environment.environment[0].environment
   secret_name     = each.key
