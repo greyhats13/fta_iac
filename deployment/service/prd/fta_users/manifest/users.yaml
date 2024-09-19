@@ -1,5 +1,5 @@
 applications:
-  ${unit}-${code}-${feature}:
+  ${unit}-${env}-${code}-${feature}:
     namespace: ${extra_vars.argocd_namespace}
     additionalLabels: {}
     additionalAnnotations: {}

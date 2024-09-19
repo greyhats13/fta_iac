@@ -17,5 +17,5 @@ data "google_kms_secret" "secrets" {
 }
 
 data "google_secret_manager_secret_version" "iac" {
-  secret = "iac"
+  secret = "fta-mstr-gsm-iac"
 }

@@ -51,29 +51,28 @@ module "gsa" {
   ]
 }
 
-
 # Secret Manager for application secrets
 ## Save the app secret in json format to the Secret Manager
 module "gsm" {
-  source      = "../../../../modules/gcp/secret-manager"
+  source      = "../../../modules/gcp/secret-manager"
   region      = var.region
   standard    = local.svc_standard
-  name        = local.svc_naming_standard
+  name        = local.svc_name_full
   secret_data = jsonencode(local.app_secret) // Save the app secret in json format to the Secret Manager (see locals.tf)
 }
 
 # Cloud SQL for application database and user
 ## Create application database and user in Cloud SQL
-# module "sql" {
-#   source        = "../../../../modules/gcp/sql"
-#   region        = var.region
-#   standard      = local.svc_standard
-#   project_id    = data.google_project.current.project_id
-#   instance_name = data.terraform_remote_state.cloud_deployment.outputs.cloudsql_instance_name
-#   database      = jsondecode(module.gsm.secret_data)["DATABASE"]
-#   username      = jsondecode(module.gsm.secret_data)["USERNAME"]
-#   password      = jsondecode(module.gsm.secret_data)["PASSWORD"]
-# }
+module "sql" {
+  source        = "../../../../modules/gcp/sql"
+  region        = var.region
+  standard      = local.svc_standard
+  project_id    = data.google_project.current.project_id
+  instance_name = data.terraform_remote_state.cloud_deployment.outputs.cloudsql_instance_name
+  database      = jsondecode(module.gsm.secret_data)["DATABASE"]
+  username      = jsondecode(module.gsm.secret_data)["USERNAME"]
+  password      = jsondecode(module.gsm.secret_data)["PASSWORD"]
+}
 
 # Artifact Registry for application container images
 ## Create a repository in Artifact Registry for the application
@@ -113,29 +112,29 @@ module "artifact_registry" {
 
 # ArgoCD Application for application deployment
 ## Create an ArgoCD application for the application
-# module "argocd_app" {
-#   source        = "../../../../modules/cicd/helm"
-#   region        = var.region
-#   standard      = local.svc_standard
-#   repository    = "https://argoproj.github.io/argo-helm"
-#   chart         = "argocd-apps"
-#   values        = ["${file("manifest/${local.svc_standard.Feature}.yaml")}"]
-#   namespace     = "argocd"
-#   project_id    = data.google_project.current.project_id
-#   dns_name      = "${var.env}.${trimsuffix(data.terraform_remote_state.cloud_deployment.outputs.main_dns_name, ".")}"
-#   extra_vars = {
-#     argocd_namespace      = "argocd"
-#     source_repoURL        = "https://github.com/${data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_fullname}"
-#     source_targetRevision = "HEAD"
-#     source_path = var.env == "dev" ? "incubator/${local.svc_name}" : (
-#       var.env == "stg" ? "test/${local.svc_name}" : "stable/${local.svc_name}"
-#     )
-#     project                                = "default"
-#     destination_server                     = "https://kubernetes.default.svc"
-#     destination_namespace                  = var.env
-#     avp_type                               = "gcpsecretmanager"
-#     syncPolicy_automated_prune             = true
-#     syncPolicy_automated_selfHeal          = true
-#     syncPolicy_syncOptions_CreateNamespace = true
-#   }
-# }
+module "argocd_app" {
+  source        = "../../../../modules/cicd/helm"
+  region        = var.region
+  standard      = local.svc_standard
+  repository    = "https://argoproj.github.io/argo-helm"
+  chart         = "argocd-apps"
+  values        = ["${file("manifest/${local.svc_standard.Feature}.yaml")}"]
+  namespace     = "argocd"
+  project_id    = data.google_project.current.project_id
+  dns_name      = "${var.env}.${trimsuffix(data.terraform_remote_state.cloud_deployment.outputs.main_dns_name, ".")}"
+  extra_vars = {
+    argocd_namespace      = "argocd"
+    source_repoURL        = "https://github.com/${data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_fullname}"
+    source_targetRevision = "HEAD"
+    source_path = var.env == "dev" ? "incubator/${local.svc_name}" : (
+      var.env == "stg" ? "test/${local.svc_name}" : "stable/${local.svc_name}"
+    )
+    project                                = "default"
+    destination_server                     = "https://kubernetes.default.svc"
+    destination_namespace                  = var.env
+    avp_type                               = "gcpsecretmanager"
+    syncPolicy_automated_prune             = true
+    syncPolicy_automated_selfHeal          = true
+    syncPolicy_syncOptions_CreateNamespace = true
+  }
+}

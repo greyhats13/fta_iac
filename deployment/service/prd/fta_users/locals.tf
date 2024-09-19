@@ -6,6 +6,7 @@ locals {
     Feature = "users"
   }
   svc_naming_standard = "${local.svc_standard.Unit}-${local.svc_standard.Code}-${local.svc_standard.Feature}"
+  svc_name_full       = "${local.svc_standard.Unit}-${local.svc_standard.Env}-${local.svc_standard.Code}-${local.svc_standard.Feature}"
   svc_name            = "${local.svc_standard.Unit}_${local.svc_standard.Feature}"
   ## Environment variables that will be stored in Github repo environment for Github Actions
   github_action_variables = {
@@ -25,7 +26,7 @@ locals {
 
   ## Secrets that will be stored in the Secret Manager
   app_secret = {
-    "USERNAME" = local.svc_name
+    "USERNAME" = "${local.svc_name}_${var.env}"
     "PASSWORD" = random_password.password.result
     "DATABASE" = "${local.svc_name}_db_${var.env}"
     "HOST"     = data.terraform_remote_state.cloud_deployment.outputs.cloudsql_instance_ip_address

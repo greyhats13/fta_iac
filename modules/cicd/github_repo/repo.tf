@@ -195,13 +195,13 @@ resource "kubernetes_secret_v1" "argocd" {
 }
 
 resource "github_repository_environment" "environment" {
-  count       = length(var.github_action_secrets) > 0 || length(var.github_action_variables) > 0 ? 1 : 0
+  count       = (length(var.github_action_secrets) > 0 || length(var.github_action_variables) > 0) && var.standard.Env == "dev" ? 1 : 0
   environment = "${github_repository.repo[count.index].name}"
   repository  = github_repository.repo[count.index].name
 }
 
 resource "github_actions_environment_variable" "variable" {
-  for_each      = var.github_action_variables
+  for_each      = var.standard.Env != "dev" && var.standard.Env != "mstr"  ? var.github_action_variables : {}
   repository    = github_repository.repo[0].name
   environment   = github_repository_environment.environment[0].environment
   variable_name = each.key
@@ -209,7 +209,7 @@ resource "github_actions_environment_variable" "variable" {
 }
 
 resource "github_actions_environment_secret" "secret" {
-  for_each        = var.github_action_secrets
+  for_each        = var.standard.Env != "dev" && var.standard.Env != "mstr" ? var.github_action_secrets : {}
   repository      = github_repository.repo[0].name
   environment     = github_repository_environment.environment[0].environment
   secret_name     = each.key
