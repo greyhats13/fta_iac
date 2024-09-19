@@ -145,6 +145,10 @@ output "gitops_repo_fullname" {
   value = flatten(module.repo_gitops.*.full_name)[0]
 }
 
+output "gitops_repo_name" {
+  value = flatten(module.repo_gitops.*.name)[0]
+}
+
 output "gitops_repo_ssh_clone_url" {
   value = flatten(module.repo_gitops.*.ssh_clone_url)[0]
 }

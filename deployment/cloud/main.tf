@@ -267,11 +267,11 @@ module "cloudsql_instance_main" {
   standard               = local.cloudsql_standard
   name                   = local.cloudsql_naming_standard
   vpc_id                 = module.vpc_main.vpc_id
-  global_address_purpose = "VPC_PEERING"
-  global_address_type    = "INTERNAL"
-  prefix_length          = 16
-  service_name           = "servicenetworking.googleapis.com"
-  database_version       = "POSTGRES_15"
+  # global_address_purpose = "VPC_PEERING"
+  # global_address_type    = "INTERNAL"
+  # prefix_length          = 16
+  # service_name           = "servicenetworking.googleapis.com"
+  database_version       = "POSTGRES_16"
   settings = {
     tier                = "db-f1-micro" # Choose an appropriate machine type
     availability_type   = "ZONAL"       # "ZONAL" or "REGIONAL"
@@ -294,10 +294,10 @@ module "cloudsql_instance_main" {
     }
 
     ip_configuration = {
-      ipv4_enabled                                  = false
-      private_network                               = module.vpc_main.vpc_self_link
+      ipv4_enabled                                  = true
+      # private_network                               = module.vpc_main.vpc_self_link
       ssl_mode                                      = "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
-      enable_private_path_for_google_cloud_services = true
+      enable_private_path_for_google_cloud_services = false
       authorized_networks                           = [] # Empty list since it's private
     }
 

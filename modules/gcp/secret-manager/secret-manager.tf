@@ -1,5 +1,5 @@
 resource "google_secret_manager_secret" "secret" {
-  secret_id = var.standard.Feature
+  secret_id = var.name
 
   labels = {
     "unit"    = var.standard.Unit

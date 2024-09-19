@@ -11,7 +11,7 @@ locals {
   github_action_variables = {
     service_name          = local.svc_name
     docker_repository_uri = "greyhats13/${local.svc_name}"
-    gitops_repo_name      = data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_fullname
+    gitops_repo_name      = data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_name
     repo_gitops_ssh       = data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_ssh_clone_url
     gitops_path_dev       = "incubator/${local.svc_name}"
     gitops_path_stg       = "test/${local.svc_name}"

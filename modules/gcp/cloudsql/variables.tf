@@ -19,33 +19,33 @@ variable "name" {
   description = "The name of the Cloud SQL instance."
 }
 
-# global address arguments
-variable "global_address_purpose" {
-  type        = string
-  description = "The purpose of the global address."
-}
+# # global address arguments
+# variable "global_address_purpose" {
+#   type        = string
+#   description = "The purpose of the global address."
+# }
 
-variable "global_address_type" {
-  type        = string
-  description = "The type of the global address."
-}
+# variable "global_address_type" {
+#   type        = string
+#   description = "The type of the global address."
+# }
 
-variable "allocated_ip_range" {
-  type        = string
-  description = "The CIDR range to allocate for private service access. If null, prefix_length is used."
-  default     = null
-}
+# variable "allocated_ip_range" {
+#   type        = string
+#   description = "The CIDR range to allocate for private service access. If null, prefix_length is used."
+#   default     = null
+# }
 
-variable "prefix_length" {
-  type        = number
-  description = "The prefix length of the IP range to allocate for private service access. Used if allocated_ip_range is null."
-}
+# variable "prefix_length" {
+#   type        = number
+#   description = "The prefix length of the IP range to allocate for private service access. Used if allocated_ip_range is null."
+# }
 
-# Service Networking arguments
-variable "service_name" {
-  type        = string
-  description = "Provider peering service that is managing peering connectivity for a service provider organization"
-}
+# # Service Networking arguments
+# variable "service_name" {
+#   type        = string
+#   description = "Provider peering service that is managing peering connectivity for a service provider organization"
+# }
 
 # Cloud SQL Instance Arguments
 variable "database_version" {
@@ -83,9 +83,9 @@ variable "settings" {
 
     ip_configuration = object({
       ipv4_enabled                                  = bool
-      private_network                               = string
+      private_network                               = optional(string)
       ssl_mode                                      = string
-      enable_private_path_for_google_cloud_services = bool
+      enable_private_path_for_google_cloud_services = optional(bool)
       authorized_networks = list(object({
         name  = string
         value = string
