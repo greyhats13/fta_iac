@@ -2,7 +2,7 @@
 terraform {
   backend "gcs" {
     bucket = "fta-mstr-gcs-tfstate"
-    prefix = "fta/service/deployment/prd/fta-users"
+    prefix = "fta/service/deployment/fta-dev-svc-users"
   }
   required_providers {
     github = {
