@@ -131,6 +131,18 @@ variable "kubectl_manifests" {
   default     = []
 }
 
+variable "before_helm_kubectl_manifests" {
+  type        = list(string)
+  description = "Kubectl manifest before helm release"
+  default     = []
+}
+
+variable "before_helm_k8s_manifests" {
+  type        = list(string)
+  description = "Kubernetes manifest before helm release"
+  default     = []
+}
+
 variable "extra_vars" {
   type        = map(any)
   description = "helm values extra vars"

@@ -544,26 +544,19 @@ module "ingress_nginx" {
 ## Cert Manager
 ## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
 module "cert_manager" {
-  source           = "../../modules/cicd/helm"
-  region           = var.region
-  standard         = local.cert_manager_standard
-  repository       = "https://charts.jetstack.io"
-  chart            = "cert-manager"
-  project_id       = data.google_project.curent.project_id
-  values           = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
-  namespace        = "cert-manager"
-  create_namespace = true
+  source            = "../../modules/cicd/helm"
+  region            = var.region
+  standard          = local.cert_manager_standard
+  repository        = "https://charts.jetstack.io"
+  chart             = "cert-manager"
+  project_id        = data.google_project.curent.project_id
+  values            = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+  namespace         = "cert-manager"
+  create_namespace  = true
+  kubectl_manifests = ["cluster-issuer.yaml"]
   depends_on = [
     module.gke_main
   ]
-}
-
-## Create Cluster Issuer for Cert Manager
-resource "kubectl_manifest" "cluster_issuer" {
-  yaml_body = templatefile("manifest/cluster-issuer.yaml", {
-    unit = var.unit
-  })
-  depends_on = [module.cert_manager]
 }
 
 ## ArgoCD
@@ -602,7 +595,7 @@ module "argocd" {
     module.gke_main,
     module.external_dns,
     module.ingress_nginx,
-    kubectl_manifest.cluster_issuer
+    module.cert_manager
   ]
 }
 
@@ -621,37 +614,27 @@ module "sql_sonar_jdbc" {
 
 ## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
 module "sonarqube" {
-  source                = "../../modules/cicd/helm"
-  region                = var.region
-  standard              = local.sonarqube_standard
-  repository            = "https://SonarSource.github.io/helm-chart-sonarqube"
-  chart                 = "sonarqube"
-  project_id            = data.google_project.curent.project_id
-  gsa_roles             = ["roles/cloudsql.client"]
-  values                = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
-  namespace             = "sonarqube"
-  create_namespace      = true
-  create_gsa            = true
-  use_workload_identity = true
-  dns_name              = trimsuffix(module.dns_main.dns_name, ".")
+  source                        = "../../modules/cicd/helm"
+  region                        = var.region
+  standard                      = local.sonarqube_standard
+  repository                    = "https://SonarSource.github.io/helm-chart-sonarqube"
+  chart                         = "sonarqube"
+  project_id                    = data.google_project.curent.project_id
+  gsa_roles                     = ["roles/cloudsql.client"]
+  values                        = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+  namespace                     = "sonarqube"
+  create_namespace              = true
+  before_helm_kubectl_manifests = ["sonarqube-secret.yaml"]
+  create_gsa                    = true
+  use_workload_identity         = true
+  dns_name                      = trimsuffix(module.dns_main.dns_name, ".")
   extra_vars = {
-    sonarqube_jdbc_url  = "jdbc:postgresql://${module.cloudsql_instance_main.instance_ip_address}:${var.sonarqube_jdbc_port}/${var.sonarqube_jdbc_db}"
-    sonarqube_jdbc_user = var.sonarqube_jdbc_user
+    sonarqube_password      = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"])
+    sonarqube_jdbc_url      = "jdbc:postgresql://${module.cloudsql_instance_main.instance_ip_address}:${var.sonarqube_jdbc_port}/${var.sonarqube_jdbc_db}"
+    sonarqube_jdbc_user     = var.sonarqube_jdbc_user
+    sonarqube_jdbc_password = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"])
   }
   depends_on = [
     module.gke_main
-  ]
-}
-
-## Create Cluster Issuer for Cert Manager
-resource "kubectl_manifest" "sonarqube_secret" {
-  yaml_body = templatefile("manifest/sonarqube-secret.yaml", {
-    password      = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"])
-    jdbc-password = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"])
-  })
-  depends_on = [
-    module.gke_main,
-    module.sql_sonar_jdbc,
-    module.sonarqube
   ]
 }
