@@ -624,7 +624,7 @@ module "sonarqube" {
   values                        = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
   namespace                     = "sonarqube"
   create_namespace              = true
-  before_helm_kubectl_manifests = ["sonarqube-secret.yaml"]
+  before_helm_kubectl_manifests = ["sonarqube-jdbc.yaml"]
   create_gsa                    = true
   use_workload_identity         = true
   dns_name                      = trimsuffix(module.dns_main.dns_name, ".")
