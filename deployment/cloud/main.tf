@@ -633,7 +633,7 @@ module "sonarqube" {
   source                = "../../modules/cicd/helm"
   region                = var.region
   standard              = local.sonarqube_standard
-  repository            = "https://SonarSource.github.io"
+  repository            = "https://SonarSource.github.io/helm-chart-sonarqube"
   chart                 = "sonarqube"
   project_id            = data.google_project.curent.project_id
   gsa_roles             = ["roles/cloudsql.client"]

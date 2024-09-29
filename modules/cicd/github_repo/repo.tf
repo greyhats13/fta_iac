@@ -168,13 +168,13 @@ resource "github_team_repository" "team_repo" {
   permission = each.value
 }
 
-# resource "github_repository_deploy_key" "repository_deploy_key" {
-#   count      = var.public_key != null ? 1 : 0
-#   title      = "${github_repository.repo[count.index].name}-public-key"
-#   repository = github_repository.repo[count.index].name
-#   key        = var.public_key
-#   read_only  = var.is_deploy_key_read_only
-# }
+resource "github_repository_deploy_key" "repository_deploy_key" {
+  count      = var.public_key != null ? 1 : 0
+  title      = "${github_repository.repo[count.index].name}-public-key"
+  repository = github_repository.repo[count.index].name
+  key        = var.public_key
+  read_only  = var.is_deploy_key_read_only
+}
 
 resource "kubernetes_secret_v1" "argocd" {
   count = var.argocd_namespace != null && var.ssh_key != null ? 1 : 0
