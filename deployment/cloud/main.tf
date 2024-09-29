@@ -619,19 +619,6 @@ module "sql_sonar_jdbc" {
   password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
 }
 
-
-## Create Cluster Issuer for Cert Manager
-resource "kubectl_manifest" "sonarqube_secret" {
-  yaml_body = templatefile("manifest/sonarqube-secret.yaml", {
-    password      = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"])
-    jdbc-password = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"])
-  })
-  depends_on = [
-    module.gke_main,
-    module.sql_sonar_jdbc
-  ]
-}
-
 ## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
 module "sonarqube" {
   source                = "../../modules/cicd/helm"
@@ -654,5 +641,18 @@ module "sonarqube" {
   depends_on = [
     module.gke_main,
     kubectl_manifest.sonarqube_secret
+  ]
+}
+
+## Create Cluster Issuer for Cert Manager
+resource "kubectl_manifest" "sonarqube_secret" {
+  yaml_body = templatefile("manifest/sonarqube-secret.yaml", {
+    password      = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"])
+    jdbc-password = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"])
+  })
+  depends_on = [
+    module.gke_main,
+    module.sql_sonar_jdbc,
+    module.sonarqube
   ]
 }
