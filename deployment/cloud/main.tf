@@ -616,14 +616,14 @@ module "sql_sonar_jdbc" {
   instance_name = module.cloudsql_instance_main.instance_name
   database      = var.sonarqube_jdbc_db
   username      = var.sonarqube_jdbc_user
-  password      = random_password.sonarqube_jdbc_password.result
+  password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
 }
 
 ## Create Cluster Issuer for Cert Manager
 resource "kubectl_manifest" "sonarqube_secret" {
   yaml_body = templatefile("manifest/sonarqube-secret.yaml", {
-    password      = random_password.sonarqube_admin_password.result
-    jdbc-password = base64decode(random_password.sonarqube_jdbc_password.result)
+    password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"]
+    jdbc-password = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
   })
   depends_on = [module.cert_manager]
 }
