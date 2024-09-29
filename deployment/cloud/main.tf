@@ -619,35 +619,35 @@ module "sql_sonar_jdbc" {
   password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
 }
 
-## Create Cluster Issuer for Cert Manager
-resource "kubectl_manifest" "sonarqube_secret" {
-  yaml_body = templatefile("manifest/sonarqube-secret.yaml", {
-    password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"]
-    jdbc-password = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
-  })
-  depends_on = [module.cert_manager]
-}
+# ## Create Cluster Issuer for Cert Manager
+# resource "kubectl_manifest" "sonarqube_secret" {
+#   yaml_body = templatefile("manifest/sonarqube-secret.yaml", {
+#     password      = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"])
+#     jdbc-password = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"])
+#   })
+#   depends_on = [module.cert_manager]
+# }
 
-## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
-module "sonarqube" {
-  source                = "../../modules/cicd/helm"
-  region                = var.region
-  standard              = local.sonarqube_standard
-  repository            = "https://SonarSource.github.io/helm-chart-sonarqube"
-  chart                 = "sonarqube"
-  project_id            = data.google_project.curent.project_id
-  gsa_roles             = ["roles/cloudsql.client"]
-  values                = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
-  namespace             = "sonarqube"
-  create_namespace      = true
-  create_gsa            = true
-  use_workload_identity = true
-  dns_name              = trimsuffix(module.dns_main.dns_name, ".")
-  extra_vars = {
-    sonarqube_jdbc_url  = "jdbc:postgresql://${module.cloudsql_instance_main.instance_ip_address}:${var.sonarqube_jdbc_port}/${var.sonarqube_jdbc_db}"
-    sonarqube_jdbc_user = var.sonarqube_jdbc_user
-  }
-  depends_on = [
-    module.gke_main
-  ]
-}
+# ## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
+# module "sonarqube" {
+#   source                = "../../modules/cicd/helm"
+#   region                = var.region
+#   standard              = local.sonarqube_standard
+#   repository            = "https://SonarSource.github.io/helm-chart-sonarqube"
+#   chart                 = "sonarqube"
+#   project_id            = data.google_project.curent.project_id
+#   gsa_roles             = ["roles/cloudsql.client"]
+#   values                = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+#   namespace             = "sonarqube"
+#   create_namespace      = true
+#   create_gsa            = true
+#   use_workload_identity = true
+#   dns_name              = trimsuffix(module.dns_main.dns_name, ".")
+#   extra_vars = {
+#     sonarqube_jdbc_url  = "jdbc:postgresql://${module.cloudsql_instance_main.instance_ip_address}:${var.sonarqube_jdbc_port}/${var.sonarqube_jdbc_db}"
+#     sonarqube_jdbc_user = var.sonarqube_jdbc_user
+#   }
+#   depends_on = [
+#     module.gke_main
+#   ]
+# }
