@@ -1,7 +1,7 @@
-resource "kubernetes_manifest" "manifest" {
-  count    = var.create_managed_certificate ? 1 : 0
-  manifest = yamldecode(templatefile("manifest/managed-cert.yaml", { feature = var.standard.Feature, env = var.standard.Env, namespace = local.namespace, dns_name = var.dns_name }))
-}
+# resource "kubernetes_manifest" "manifest" {
+#   count    = var.create_managed_certificate ? 1 : 0
+#   manifest = yamldecode(templatefile("manifest/managed-cert.yaml", { feature = var.standard.Feature, env = var.standard.Env, namespace = local.namespace, dns_name = var.dns_name }))
+# }
 
 resource "google_service_account" "gsa" {
   count        = var.create_gsa ? 1 : 0

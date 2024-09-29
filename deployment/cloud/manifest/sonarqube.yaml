@@ -9,7 +9,7 @@ image:
 securityContext:
   fsGroup: 0
 containerSecurityContext:
-# Sonarqube dockerfile creates sonarqube user as UID and GID 0
+  # Sonarqube dockerfile creates sonarqube user as UID and GID 0
   allowPrivilegeEscalation: false
   runAsNonRoot: true
   runAsUser: 1000
@@ -58,22 +58,6 @@ initSysctl:
     readOnlyRootFilesystem: true
   # resources: {}
 
-# This should not be required anymore, used to chown/chmod folder created by faulty CSI driver that are not applying properly POSIX fsgroup.
-initFs:
-  enabled: true
-  # Image: busybox:1.36
-  # Compatible with podSecurity standard baseline.
-  securityContext:
-    privileged: false
-    runAsNonRoot: false
-    runAsUser: 0
-    runAsGroup: 0
-    seccompProfile:
-      type: RuntimeDefault
-    capabilities:
-      drop: ["ALL"]
-      add: ["CHOWN"]
-    readOnlyRootFilesystem: true
 resources:
   limits:
     cpu: 800m
@@ -86,12 +70,19 @@ resources:
 
 jdbcOverwrite:
   enabled: true
-  jdbcSecretName: "sonarqube-secret"
-  jdbcSecretPasswordKey: "SONARQUBE_JDBC_PASSWORD"
+  jdbcUrl: ${extra_vars.sonarqube_jdbc_url}
+  jdbcUsername: ${extra_vars.sonarqube_jdbc_username}
+  jdbcPassword: ${extra_vars.sonarqube_jdbc_password}
 
+## Unknown bugs: check _helpers.tpl to examine the logics
+## We must change the default value from postgresql even if it's not enabled
 postgresql:
-  enabled: true
-  
+  enabled: false
+  postgresqlUsername: ${extra_vars.sonarqube_jdbc_username}
+  postgresqlPassword: ${extra_vars.sonarqube_jdbc_password}
+  postgresqlDatabase: ${extra_vars.sonarqube_jdbc_database}
+  postgresqlServer: ${extra_vars.sonarqube_jdbc_host}
+
 serviceAccount:
   create: true
   # name:
@@ -99,12 +90,3 @@ serviceAccount:
   ## Annotations for the Service Account
   annotations:
     iam.gke.io/gcp-service-account: "${service_account_annotation}"
-
-account:
-  adminPasswordSecretName: "sonarqube-secret"
-
-extraConfig:
-  config:
-    - sonarqube-config
-  secrets:
-    - sonarqube-secret

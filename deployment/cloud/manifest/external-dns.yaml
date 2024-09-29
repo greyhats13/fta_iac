@@ -1,7 +1,0 @@
-nodeSelector:
-  iam.gke.io/gke-metadata-server-enabled: "true"
-
-serviceAccount:
-  name: "${service_account_name}"
-  annotations:
-    iam.gke.io/gcp-service-account: "${service_account_annotation}"

@@ -483,82 +483,6 @@ module "gke_main" {
 
 # Kubernetes Addons
 
-## External DNS
-## External DNS is a Kubernetes addon that configures public DNS servers with information about exposed services to make them discoverable.
-module "external_dns" {
-  source                     = "../../modules/cicd/helm"
-  region                     = var.region
-  standard                   = local.external_dns_standard
-  repository                 = "https://charts.bitnami.com/bitnami"
-  chart                      = "external-dns"
-  create_gsa                 = true
-  use_workload_identity      = true
-  project_id                 = data.google_project.curent.project_id
-  gsa_roles                  = ["roles/dns.admin"]
-  create_managed_certificate = false
-  values                     = ["${file("manifest/${local.external_dns_standard.Feature}.yaml")}"]
-  helm_sets = [
-    {
-      name  = "provider"
-      value = "google"
-    },
-    {
-      name  = "google.project"
-      value = data.google_project.curent.project_id
-    },
-    {
-      name  = "policy"
-      value = "sync"
-    },
-    {
-      name  = "zoneVisibility"
-      value = module.dns_main.dns_zone_visibility
-    }
-  ]
-  namespace        = "dns"
-  create_namespace = true
-  depends_on = [
-    module.gke_main
-  ]
-}
-
-## Nginx Ingress Controller
-## Nginx Ingress Controller is an Ingress controller that manages external access to HTTP services in a Kubernetes cluster using Nginx.
-module "ingress_nginx" {
-  source           = "../../modules/cicd/helm"
-  region           = var.region
-  standard         = local.ingress_nginx_standard
-  repository       = "https://kubernetes.github.io/ingress-nginx"
-  chart            = "ingress-nginx"
-  values           = ["${file("manifest/${local.ingress_nginx_standard.Feature}.yaml")}"]
-  namespace        = "ingress"
-  create_namespace = true
-  project_id       = data.google_project.curent.project_id
-  dns_name         = trimsuffix(module.dns_main.dns_name, ".")
-  depends_on = [
-    module.gke_main,
-    module.external_dns
-  ]
-}
-
-## Cert Manager
-## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
-module "cert_manager" {
-  source            = "../../modules/cicd/helm"
-  region            = var.region
-  standard          = local.cert_manager_standard
-  repository        = "https://charts.jetstack.io"
-  chart             = "cert-manager"
-  project_id        = data.google_project.curent.project_id
-  values            = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
-  namespace         = "cert-manager"
-  create_namespace  = true
-  kubectl_manifests = ["cluster-issuer.yaml"]
-  depends_on = [
-    module.gke_main
-  ]
-}
-
 ## ArgoCD
 ## ArgoCD is a declarative, GitOps continuous delivery tool for Kubernetes.
 module "argocd" {
@@ -593,48 +517,46 @@ module "argocd" {
   ]
   depends_on = [
     module.gke_main,
-    module.external_dns,
-    module.ingress_nginx,
-    module.cert_manager
   ]
 }
 
-# Cloud SQL for application database and user
-## Create application database and user in Cloud SQL
-module "sql_sonar_jdbc" {
-  source        = "../../modules/gcp/sql"
-  region        = var.region
-  standard      = local.sonarqube_standard
-  project_id    = data.google_project.curent.project_id
-  instance_name = module.cloudsql_instance_main.instance_name
-  database      = var.sonarqube_jdbc_db
-  username      = var.sonarqube_jdbc_user
-  password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
-}
+# # Cloud SQL for application database and user
+# # Create application database and user in Cloud SQL
+# module "sql_sonar_jdbc" {
+#   source        = "../../modules/gcp/sql"
+#   region        = var.region
+#   standard      = local.sonarqube_standard
+#   project_id    = data.google_project.curent.project_id
+#   instance_name = module.cloudsql_instance_main.instance_name
+#   database      = var.sonarqube_jdbc_db
+#   username      = var.sonarqube_jdbc_user
+#   password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
+# }
 
-## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
-module "sonarqube" {
-  source                        = "../../modules/cicd/helm"
-  region                        = var.region
-  standard                      = local.sonarqube_standard
-  repository                    = "https://SonarSource.github.io/helm-chart-sonarqube"
-  chart                         = "sonarqube"
-  project_id                    = data.google_project.curent.project_id
-  gsa_roles                     = ["roles/cloudsql.client"]
-  values                        = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
-  namespace                     = "sonarqube"
-  create_namespace              = true
-  before_helm_kubectl_manifests = ["sonarqube-jdbc.yaml"]
-  create_gsa                    = true
-  use_workload_identity         = true
-  dns_name                      = trimsuffix(module.dns_main.dns_name, ".")
-  extra_vars = {
-    sonarqube_password      = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"])
-    sonarqube_jdbc_url      = "jdbc:postgresql://${module.cloudsql_instance_main.instance_ip_address}:${var.sonarqube_jdbc_port}/${var.sonarqube_jdbc_db}"
-    sonarqube_jdbc_user     = var.sonarqube_jdbc_user
-    sonarqube_jdbc_password = base64encode(jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"])
-  }
-  depends_on = [
-    module.gke_main
-  ]
-}
+# ## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
+# module "sonarqube" {
+#   source                = "../../modules/cicd/helm"
+#   region                = var.region
+#   standard              = local.sonarqube_standard
+#   repository            = "https://SonarSource.github.io/helm-chart-sonarqube"
+#   chart                 = "sonarqube"
+#   project_id            = data.google_project.curent.project_id
+#   gsa_roles             = ["roles/cloudsql.client"]
+#   values                = ["${file("manifest/${local.sonarqube_standard.Feature}.yaml")}"]
+#   namespace             = "sonarqube"
+#   create_namespace      = true
+#   create_gsa            = true
+#   use_workload_identity = true
+#   dns_name              = trimsuffix(module.dns_main.dns_name, ".")
+#   extra_vars = {
+#     sonarqube_password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"]
+#     sonarqube_jdbc_url      = "jdbc:postgresql://${module.cloudsql_instance_main.instance_ip_address}:${var.sonarqube_jdbc_port}/${var.sonarqube_jdbc_db}"
+#     sonarqube_jdbc_host     = module.cloudsql_instance_main.instance_ip_address
+#     sonarqube_jdbc_database = var.sonarqube_jdbc_db
+#     sonarqube_jdbc_username = var.sonarqube_jdbc_user
+#     sonarqube_jdbc_password = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
+#   }
+#   depends_on = [
+#     module.gke_main
+#   ]
+# }
