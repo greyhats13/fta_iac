@@ -639,8 +639,7 @@ module "sonarqube" {
     sonarqube_jdbc_user = var.sonarqube_jdbc_user
   }
   depends_on = [
-    module.gke_main,
-    kubectl_manifest.sonarqube_secret
+    module.gke_main
   ]
 }
 
