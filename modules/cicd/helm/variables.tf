@@ -17,7 +17,7 @@ variable "project_id" {
 }
 
 # GCP arguments
-variable "create_service_account" {
+variable "create_gsa" {
   type        = bool
   description = "create google service account"
   default     = false
@@ -29,7 +29,7 @@ variable "use_workload_identity" {
   default     = false
 }
 
-variable "google_service_account_role" {
+variable "gsa_roles" {
   type        = list(string)
   description = "GCP service account role"
   default     = []
@@ -128,6 +128,18 @@ variable "k8s_manifests" {
 variable "kubectl_manifests" {
   type        = list(string)
   description = "Kubectl manifest after helm release"
+  default     = []
+}
+
+variable "before_helm_kubectl_manifests" {
+  type        = list(string)
+  description = "Kubectl manifest before helm release"
+  default     = []
+}
+
+variable "before_helm_k8s_manifests" {
+  type        = list(string)
+  description = "Kubernetes manifest before helm release"
   default     = []
 }
 

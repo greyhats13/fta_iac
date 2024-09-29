@@ -51,11 +51,13 @@ locals {
   iac_secret_merged = merge(
     local.iac_secret_map,
     {
-      "atlantis_ssh_base64"    = base64encode(tls_private_key.atlantis_ssh.private_key_pem)
-      "atlantis_password"      = random_password.atlantis_password.result
-      "atlantis_github_secret" = random_password.atlantis_github_secret.result
-      "argocd_github_secret"   = random_password.argocd_github_secret.result
-      "argocd_ssh_base64"      = base64encode(tls_private_key.argocd_ssh.private_key_pem)
+      "atlantis_ssh_base64"      = base64encode(tls_private_key.atlantis_ssh.private_key_pem)
+      "atlantis_password"        = random_password.atlantis_password.result
+      "atlantis_github_secret"   = random_password.atlantis_github_secret.result
+      "argocd_github_secret"     = random_password.argocd_github_secret.result
+      "argocd_ssh_base64"        = base64encode(tls_private_key.argocd_ssh.private_key_pem)
+      "sonarqube_admin_password" = random_password.sonarqube_admin_password.result
+      "sonarqube_jdbc_password"  = random_password.sonarqube_jdbc_password.result
     }
   )
 
@@ -104,6 +106,14 @@ locals {
   }
   gke_naming_standard = "${local.gke_standard.Unit}-${local.gke_standard.Env}-${local.gke_standard.Code}-${local.gke_standard.Feature}"
 
+  ## Firestore Standard
+  firestore_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "firestore"
+    Feature = "main"
+  }
+
   # Kubernetes Addons
   ## External DNS Standard
   external_dns_standard = {
@@ -126,6 +136,14 @@ locals {
     Code    = "helm"
     Feature = "cert-manager"
   }
+  ## Sonarqube Standard
+  sonarqube_standard = {
+    Unit    = var.unit
+    Env     = var.env
+    Code    = "helm"
+    Feature = "sonarqube"
+  }
+
   ## Argo CD Standard
   argocd_standard = {
     Unit    = var.unit

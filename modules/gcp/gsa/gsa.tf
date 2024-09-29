@@ -17,7 +17,7 @@ resource "google_service_account_iam_binding" "binding" {
   count              = length(var.binding_roles)
   service_account_id = google_service_account.gsa.name
   role               = var.binding_roles[count.index]
-  members            = ["serviceAccount:${var.project_id}.svc.id.goog[${var.standard.Env}/${var.name}]"] // environment as namespace
+  members            = var.standard.Feature == "svc" ? ["serviceAccount:${var.project_id}.svc.id.goog[${var.standard.Env}/${var.name}]"] : ["serviceAccount:${var.project_id}.svc.id.goog[${var.standard.Feature}/${var.name}]"]
 }
 
 

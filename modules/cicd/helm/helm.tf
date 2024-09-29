@@ -6,9 +6,38 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
+resource "kubectl_manifest" "before_helm_kubectl" {
+  count = length(var.before_helm_kubectl_manifests)
+  yaml_body = templatefile("manifest/${var.before_helm_kubectl_manifests[count.index]}", {
+    unit                 = var.standard.Unit
+    env                  = var.standard.Env
+    code                 = var.standard.Code
+    feature              = var.standard.Feature
+    service_account_name = local.sa_naming_standard,
+    namespace            = local.namespace,
+    dns_name             = var.dns_name
+    extra_vars           = var.extra_vars
+  })
+  depends_on = [kubernetes_namespace.namespace]
+}
+
+resource "kubernetes_manifest" "before_helm_k8s" {
+  count = length(var.before_helm_k8s_manifests)
+  manifest = yamldecode(templatefile("manifest/${var.before_helm_k8s_manifests[count.index]}", {
+    env                  = var.standard.Env
+    code                 = var.standard.Code
+    feature              = var.standard.Feature
+    service_account_name = local.sa_naming_standard,
+    namespace            = local.namespace,
+    dns_name             = var.dns_name
+    extra_vars           = var.extra_vars
+  }))
+  depends_on = [helm_release.helm]
+}
+
 locals {
   sa_naming_standard   = "${var.standard.Unit}-${var.standard.Env}-${var.standard.Code}-${var.standard.Feature}"
-  helm_naming_standard = var.standard.Code == "svc" ? "${var.standard.Unit}-${var.standard.Env}-${var.standard.Code}-${var.standard.Feature}" : "${var.standard.Unit}-${var.standard.Code}-${var.standard.Feature}"
+  helm_naming_standard = var.standard.Code == "svc" || var.standard.Code == "addon" ? "${var.standard.Unit}-${var.standard.Env}-${var.standard.Code}-${var.standard.Feature}" : "${var.standard.Unit}-${var.standard.Code}-${var.standard.Feature}"
   namespace            = var.create_namespace ? kubernetes_namespace.namespace[0].metadata[0].name : var.namespace
 }
 
@@ -29,7 +58,7 @@ resource "helm_release" "helm" {
         env                        = var.standard.Env
         feature                    = var.standard.Feature
         dns_name                   = var.dns_name
-        service_account_annotation = var.create_service_account ? google_service_account.gsa[0].email : null
+        service_account_annotation = var.create_gsa ? google_service_account.gsa[0].email : null
         extra_vars                 = var.extra_vars
       }
       )
@@ -65,4 +94,34 @@ resource "helm_release" "helm" {
       value = set_list.value.value
     }
   }
+}
+
+resource "kubernetes_manifest" "manifests" {
+  count = length(var.k8s_manifests)
+  manifest = yamldecode(templatefile("manifest/${var.k8s_manifests[count.index]}", {
+    unit                 = var.standard.Unit
+    env                  = var.standard.Env
+    code                 = var.standard.Code
+    feature              = var.standard.Feature
+    service_account_name = local.sa_naming_standard,
+    namespace            = local.namespace,
+    dns_name             = var.dns_name
+    extra_vars           = var.extra_vars
+  }))
+  depends_on = [helm_release.helm]
+}
+
+resource "kubectl_manifest" "manifests" {
+  count = length(var.kubectl_manifests)
+  yaml_body = templatefile("manifest/${var.kubectl_manifests[count.index]}", {
+    unit                 = var.standard.Unit
+    env                  = var.standard.Env
+    code                 = var.standard.Code
+    feature              = var.standard.Feature
+    service_account_name = local.sa_naming_standard,
+    namespace            = local.namespace,
+    dns_name             = var.dns_name
+    extra_vars           = var.extra_vars
+  })
+  depends_on = [helm_release.helm]
 }

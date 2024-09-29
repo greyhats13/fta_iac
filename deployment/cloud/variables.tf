@@ -46,7 +46,7 @@ variable "atlantis_version" {
 }
 
 variable "atlantis_user" {
-  type       = string
+  type        = string
   description = "Atlantis username"
 }
 
@@ -64,4 +64,20 @@ variable "argocd_vault_plugin_version" {
 ### Secret Chipertext from terraform.tfvars
 variable "iac_secrets_ciphertext" {
   description = "List of secrets ciphertext"
+}
+
+### SonarQube
+variable "sonarqube_jdbc_user" {
+  type        = string
+  description = "SonarQube database user"
+}
+
+variable "sonarqube_jdbc_db" {
+  type        = string
+  description = "SonarQube database name"
+}
+
+variable "sonarqube_jdbc_port" {
+  type        = number
+  description = "SonarQube database port"
 }
