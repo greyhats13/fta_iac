@@ -86,10 +86,8 @@ resources:
 
 jdbcOverwrite:
   enabled: true
-  jdbcUrl: "${extra_vars.sonarqube_jdbc_url}"
-  jdbcUsername: "${extra_vars.sonarqube_jdbc_user}"
   jdbcSecretName: "sonarqube-secret"
-  jdbcSecretPasswordKey: "jdbc-password"
+  jdbcSecretPasswordKey: "SONARQUBE_JDBC_PASSWORD"
 
 postgresql:
   enabled: true
@@ -106,5 +104,7 @@ account:
   adminPasswordSecretName: "sonarqube-secret"
 
 extraConfig:
+  config:
+    - sonarqube-config
   secrets:
     - sonarqube-secret

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: external-sonarqube-opts
+data:
+  SONARQUBE_JDBC_USERNAME: foo
+  SONARQUBE_JDBC_URL: jdbc:postgresql://db.example.com:5432/sonar
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sonarqube-secret
+  namespace: sonarqube
+type: Opaque
+data:
+  SONARQUBE_JDBC_PASSWORD: "${extra_vars.sonarqube_jdbc_password}"
+  password: "${extra_vars.sonarqube_password}"
+  currentPassword: "${extra_vars.sonarqube_password}"
