@@ -630,7 +630,7 @@ module "sonarqube" {
   gsa_roles             = ["roles/cloudsql.client"]
   values                = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
   namespace             = "sonarqube"
-  create_namespace      = false
+  create_namespace      = true
   create_gsa            = true
   use_workload_identity = true
   dns_name              = trimsuffix(module.dns_main.dns_name, ".")
@@ -652,7 +652,6 @@ resource "kubectl_manifest" "sonarqube_secret" {
   })
   depends_on = [
     module.gke_main,
-    module.sql_sonar_jdbc,
-    module.sonarqube
+    module.sql_sonar_jdbc
   ]
 }
