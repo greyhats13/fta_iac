@@ -12,6 +12,7 @@ module "gcp_project" {
     kms                = "cloudkms.googleapis.com",
     sql                = "sqladmin.googleapis.com",
     service_networking = "servicenetworking.googleapis.com"
+    firestore          = "firestore.googleapis.com"
   }
 }
 
@@ -90,6 +91,50 @@ module "repo_iac" {
   }
 }
 
+## Provisioning the Github repository for fta_gitops
+module "repo_gitops" {
+  source                 = "../../modules/cicd/github_repo"
+  standard               = local.repo_gitops_standard
+  visibility             = "public"
+  has_issues             = true
+  has_discussions        = true
+  has_projects           = true
+  has_wiki               = true
+  delete_branch_on_merge = true
+  auto_init              = true
+  license_template       = "apache-2.0"
+  security_and_analysis = {
+    advanced_security = {
+      status = "enabled"
+    }
+    secret_scanning = {
+      status = "enabled"
+    }
+    secret_scanning_push_protection = {
+      status = "enabled"
+    }
+  }
+  topics               = ["gitops", "helm", "devops", "argocd", "argocd-vault-plugin", "kubernetes"]
+  vulnerability_alerts = true
+  webhooks = {
+    argocd = {
+      configuration = {
+        url          = "https://argocd.fta.blast.co.id/api/webhook"
+        content_type = "json"
+        insecure_ssl = false
+        secret       = jsondecode(module.gsm_iac.secret_data)["argocd_github_secret"]
+      }
+      active = true
+      events = ["push"]
+    }
+  }
+  public_key              = data.tls_public_key.argocd_public_key.public_key_openssh
+  ssh_key                 = base64decode(jsondecode(module.gsm_iac.secret_data)["argocd_ssh_base64"])
+  is_deploy_key_read_only = false
+  argocd_namespace        = module.argocd.k8s_ns_name
+}
+
+## Provisioning the Cloud DNS using the DNS module
 module "dns_main" {
   source        = "../../modules/gcp/dns"
   region        = var.region
@@ -261,17 +306,17 @@ module "gce_atlantis" {
 
 ## Provisioning the Cloud SQL instance using the Cloud SQL module
 module "cloudsql_instance_main" {
-  source                 = "../../modules/gcp/cloudsql"
-  region                 = var.region
-  project_id             = data.google_project.curent.project_id
-  standard               = local.cloudsql_standard
-  name                   = local.cloudsql_naming_standard
-  vpc_id                 = module.vpc_main.vpc_id
+  source     = "../../modules/gcp/cloudsql"
+  region     = var.region
+  project_id = data.google_project.curent.project_id
+  standard   = local.cloudsql_standard
+  name       = local.cloudsql_naming_standard
+  vpc_id     = module.vpc_main.vpc_id
   # global_address_purpose = "VPC_PEERING"
   # global_address_type    = "INTERNAL"
   # prefix_length          = 16
   # service_name           = "servicenetworking.googleapis.com"
-  database_version       = "POSTGRES_16"
+  database_version = "POSTGRES_16"
   settings = {
     tier                = "db-f1-micro" # Choose an appropriate machine type
     availability_type   = "ZONAL"       # "ZONAL" or "REGIONAL"
@@ -294,16 +339,32 @@ module "cloudsql_instance_main" {
     }
 
     ip_configuration = {
-      ipv4_enabled                                  = true
+      ipv4_enabled = true
       # private_network                               = module.vpc_main.vpc_self_link
       ssl_mode                                      = "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
       enable_private_path_for_google_cloud_services = false
-      authorized_networks                           = [] # Empty list since it's private
+      authorized_networks = [
+        {
+          name  = "NAT IP"
+          value = "34.101.198.203/32"
+        }
+      ]
     }
 
     database_flags = [] # Add any database flags if needed
   }
   depends_on = [module.gcp_project, module.vpc_main]
+}
+
+module "firestore_main" {
+  source           = "../../modules/gcp/firestore/db"
+  region           = var.region
+  project_id       = data.google_project.curent.project_id
+  standard         = local.firestore_standard
+  name             = "(default)"
+  type             = "FIRESTORE_NATIVE"
+  concurrency_mode = "OPTIMISTIC"
+  depends_on       = [module.gcp_project]
 }
 
 # Provisioning the GKE cluster using the GKE module
@@ -345,7 +406,7 @@ module "gke_main" {
 
   master_authorized_networks_config = {
     cidr_blocks = {
-      cidr_block   = "103.104.13.0/24"
+      cidr_block   = "103.104.0.0/16"
       display_name = "my-home-public-ip"
     }
     gcp_public_cidrs_access_enabled = false
@@ -425,17 +486,17 @@ module "gke_main" {
 ## External DNS
 ## External DNS is a Kubernetes addon that configures public DNS servers with information about exposed services to make them discoverable.
 module "external_dns" {
-  source                      = "../../modules/cicd/helm"
-  region                      = var.region
-  standard                    = local.external_dns_standard
-  repository                  = "https://charts.bitnami.com/bitnami"
-  chart                       = "external-dns"
-  create_service_account      = true
-  use_workload_identity       = true
-  project_id                  = data.google_project.curent.project_id
-  google_service_account_role = ["roles/dns.admin"]
-  create_managed_certificate  = false
-  values                      = ["${file("manifest/${local.external_dns_standard.Feature}.yaml")}"]
+  source                     = "../../modules/cicd/helm"
+  region                     = var.region
+  standard                   = local.external_dns_standard
+  repository                 = "https://charts.bitnami.com/bitnami"
+  chart                      = "external-dns"
+  create_gsa                 = true
+  use_workload_identity      = true
+  project_id                 = data.google_project.curent.project_id
+  gsa_roles                  = ["roles/dns.admin"]
+  create_managed_certificate = false
+  values                     = ["${file("manifest/${local.external_dns_standard.Feature}.yaml")}"]
   helm_sets = [
     {
       name  = "provider"
@@ -496,6 +557,7 @@ module "cert_manager" {
     module.gke_main
   ]
 }
+
 ## Create Cluster Issuer for Cert Manager
 resource "kubectl_manifest" "cluster_issuer" {
   yaml_body = templatefile("manifest/cluster-issuer.yaml", {
@@ -507,19 +569,19 @@ resource "kubectl_manifest" "cluster_issuer" {
 ## ArgoCD
 ## ArgoCD is a declarative, GitOps continuous delivery tool for Kubernetes.
 module "argocd" {
-  source                      = "../../modules/cicd/helm"
-  region                      = var.region
-  standard                    = local.argocd_standard
-  repository                  = "https://argoproj.github.io/argo-helm"
-  chart                       = "argo-cd"
-  values                      = ["${file("manifest/${local.argocd_standard.Feature}.yaml")}"]
-  namespace                   = "argocd"
-  create_namespace            = true
-  create_service_account      = true
-  use_workload_identity       = true
-  project_id                  = data.google_project.curent.project_id
-  google_service_account_role = ["roles/container.admin", "roles/secretmanager.secretAccessor"]
-  dns_name                    = trimsuffix(module.dns_main.dns_name, ".")
+  source                = "../../modules/cicd/helm"
+  region                = var.region
+  standard              = local.argocd_standard
+  repository            = "https://argoproj.github.io/argo-helm"
+  chart                 = "argo-cd"
+  values                = ["${file("manifest/${local.argocd_standard.Feature}.yaml")}"]
+  namespace             = "argocd"
+  create_namespace      = true
+  create_gsa            = true
+  use_workload_identity = true
+  project_id            = data.google_project.curent.project_id
+  gsa_roles             = ["roles/container.admin", "roles/secretmanager.secretAccessor"]
+  dns_name              = trimsuffix(module.dns_main.dns_name, ".")
   extra_vars = {
     github_orgs      = var.github_orgs
     github_client_id = var.github_oauth_client_id
@@ -544,45 +606,48 @@ module "argocd" {
   ]
 }
 
-## Provisioning the Github repository for fta_gitops
-module "repo_gitops" {
-  source                 = "../../modules/cicd/github_repo"
-  standard               = local.repo_gitops_standard
-  visibility             = "public"
-  has_issues             = true
-  has_discussions        = true
-  has_projects           = true
-  has_wiki               = true
-  delete_branch_on_merge = true
-  auto_init              = true
-  license_template       = "apache-2.0"
-  security_and_analysis = {
-    advanced_security = {
-      status = "enabled"
-    }
-    secret_scanning = {
-      status = "enabled"
-    }
-    secret_scanning_push_protection = {
-      status = "enabled"
-    }
+# Cloud SQL for application database and user
+## Create application database and user in Cloud SQL
+module "sql_sonar_jdbc" {
+  source        = "../../modules/gcp/sql"
+  region        = var.region
+  standard      = local.sonarqube_standard
+  project_id    = data.google_project.curent.project_id
+  instance_name = module.cloudsql_instance_main.instance_name
+  database      = var.sonarqube_jdbc_db
+  username      = var.sonarqube_jdbc_user
+  password      = random_password.sonarqube_jdbc_password.result
+}
+
+## Create Cluster Issuer for Cert Manager
+resource "kubectl_manifest" "sonarqube_secret" {
+  yaml_body = templatefile("manifest/sonarqube-secret.yaml", {
+    password      = random_password.sonarqube_admin_password.result
+    jdbc-password = base64decode(random_password.sonarqube_jdbc_password.result)
+  })
+  depends_on = [module.cert_manager]
+}
+
+## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
+module "sonarqube" {
+  source                = "../../modules/cicd/helm"
+  region                = var.region
+  standard              = local.sonarqube_standard
+  repository            = "https://SonarSource.github.io"
+  chart                 = "sonarqube"
+  project_id            = data.google_project.curent.project_id
+  gsa_roles             = ["roles/cloudsql.client"]
+  values                = ["${file("manifest/${local.cert_manager_standard.Feature}.yaml")}"]
+  namespace             = "sonarqube"
+  create_namespace      = true
+  create_gsa            = true
+  use_workload_identity = true
+  dns_name              = trimsuffix(module.dns_main.dns_name, ".")
+  extra_vars = {
+    sonarqube_jdbc_url  = "jdbc:postgresql://${module.cloudsql_instance_main.instance_ip_address}:${var.sonarqube_jdbc_port}/${var.sonarqube_jdbc_db}"
+    sonarqube_jdbc_user = var.sonarqube_jdbc_user
   }
-  topics               = ["gitops", "helm", "devops", "argocd", "argocd-vault-plugin", "kubernetes"]
-  vulnerability_alerts = true
-  webhooks = {
-    argocd = {
-      configuration = {
-        url          = "https://argocd.fta.blast.co.id/api/webhook"
-        content_type = "json"
-        insecure_ssl = false
-        secret       = jsondecode(module.gsm_iac.secret_data)["argocd_github_secret"]
-      }
-      active = true
-      events = ["push"]
-    }
-  }
-  public_key              = data.tls_public_key.argocd_public_key.public_key_openssh
-  ssh_key                 = base64decode(jsondecode(module.gsm_iac.secret_data)["argocd_ssh_base64"])
-  is_deploy_key_read_only = false
-  argocd_namespace        = module.argocd.k8s_ns_name
+  depends_on = [
+    module.gke_main
+  ]
 }

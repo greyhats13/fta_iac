@@ -17,7 +17,7 @@ variable "project_id" {
 }
 
 # GCP arguments
-variable "create_service_account" {
+variable "create_gsa" {
   type        = bool
   description = "create google service account"
   default     = false
@@ -29,7 +29,7 @@ variable "use_workload_identity" {
   default     = false
 }
 
-variable "google_service_account_role" {
+variable "gsa_roles" {
   type        = list(string)
   description = "GCP service account role"
   default     = []
