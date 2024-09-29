@@ -652,6 +652,7 @@ resource "kubectl_manifest" "sonarqube_secret" {
   })
   depends_on = [
     module.gke_main,
-    module.sql_sonar_jdbc
+    module.sql_sonar_jdbc,
+    module.sonarqube
   ]
 }
