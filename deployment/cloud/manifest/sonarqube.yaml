@@ -92,7 +92,7 @@ jdbcOverwrite:
   jdbcSecretPasswordKey: "jdbc-password"
 
 postgresql:
-  enabled: false
+  enabled: true
   
 serviceAccount:
   create: true
