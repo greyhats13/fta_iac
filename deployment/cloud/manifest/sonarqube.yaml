@@ -107,4 +107,4 @@ account:
 
 extraConfig:
   secrets:
-    - sonarqube-jdbc
+    - sonarqube-secret
