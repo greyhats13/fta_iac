@@ -15,8 +15,3 @@ iac_secrets_ciphertext = {
   github_token_atlantis      = "CiQAVucnPr5qKyBOkvYYJ+uPfeQtWvUhnRbVYvMVTW5wH3FuIjYSUQA4ny4N9JrVLRwJS18xd0ZSXjy0iJ/pS6jUlnh4EE4fapDtM31ALvEkNEM/5iX2/U7bwaTpi9YuVT1Lxc955JSEhxZUn83fD0ByMtvv8FkB/A=="
   github_oauth_client_secret = "CiQAVucnPodamJwhIqvM+KAl7yioXUWrKm/epygLNDmKFMvOhhsSUQA4ny4Nj5+dS0DhAUkJRu4if7ICztZZreZ9rJ1IrWPbvIUXYcRFo1SlwdiZzN72B1N6ELSV9drAC9RC551Jzl0CCXl/7Ib50yNjzYLsdKtnpQ=="
 }
-
-# Sonarqube
-sonarqube_jdbc_user = "sonar"
-sonarqube_jdbc_db   = "sonar_db"
-sonarqube_jdbc_port = 5432

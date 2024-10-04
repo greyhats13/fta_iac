@@ -157,19 +157,28 @@ output "gitops_repo_http_clone_url" {
   value = flatten(module.repo_gitops.*.http_clone_url)[0]
 }
 
-# Cloud SQL Outputs
-output "cloudsql_instance_name" {
-  value = module.cloudsql_instance_main.instance_name
+# # Cloud SQL Outputs
+# output "cloudsql_instance_name" {
+#   value = module.cloudsql_instance_main.instance_name
+# }
+
+# output "cloudsql_instance_connection_name" {
+#   value = module.cloudsql_instance_main.instance_connection_name
+# }
+
+# output "cloudsql_instance_self_link" {
+#   value = module.cloudsql_instance_main.instance_self_link
+# }
+
+# output "cloudsql_instance_ip_address" {
+#   value = module.cloudsql_instance_main.instance_ip_address
+# }
+
+# Firestore Outputs
+output "firestore_id" {
+  value = module.firestore_main.firestore_id
 }
 
-output "cloudsql_instance_connection_name" {
-  value = module.cloudsql_instance_main.instance_connection_name
-}
-
-output "cloudsql_instance_self_link" {
-  value = module.cloudsql_instance_main.instance_self_link
-}
-
-output "cloudsql_instance_ip_address" {
-  value = module.cloudsql_instance_main.instance_ip_address
+output "firestore_name" {
+  value = module.firestore_main.firestore_name
 }

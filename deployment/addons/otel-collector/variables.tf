@@ -14,10 +14,3 @@ variable "env" {
   type        = string
   description = "Stage environment"
 }
-
-# Credentials
-
-variable "github_action_secrets_ciphertext" {
-  type        = map(string)
-  description = "GitHub action secrets"
-}

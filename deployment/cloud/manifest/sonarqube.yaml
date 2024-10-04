@@ -58,6 +58,8 @@ initSysctl:
     readOnlyRootFilesystem: true
   # resources: {}
 
+
+
 resources:
   limits:
     cpu: 800m
@@ -70,6 +72,8 @@ resources:
 
 jdbcOverwrite:
   enabled: true
+  # jdbcSecretName: "sonarqube-jdbc"
+  # jdbcSecretPasswordKey: "jdbc-password"
   jdbcUrl: ${extra_vars.sonarqube_jdbc_url}
   jdbcUsername: ${extra_vars.sonarqube_jdbc_username}
   jdbcPassword: ${extra_vars.sonarqube_jdbc_password}
@@ -90,3 +94,14 @@ serviceAccount:
   ## Annotations for the Service Account
   annotations:
     iam.gke.io/gcp-service-account: "${service_account_annotation}"
+
+account:
+  adminPassword: ${extra_vars.sonarqube_password}
+  currentAdminPassword: ${extra_vars.sonarqube_password}
+#   adminPasswordSecretName: "sonarqube-jdbc"
+
+# extraConfig:
+#   configmaps:
+#     - external-sonarqube-opts
+#   secrets:
+#     - sonarqube-jdbc

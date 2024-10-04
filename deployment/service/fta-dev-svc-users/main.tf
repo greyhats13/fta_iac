@@ -127,8 +127,8 @@ module "argocd_app" {
     argocd_namespace      = "argocd"
     source_repoURL        = "https://github.com/${data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_fullname}"
     source_targetRevision = "HEAD"
-    source_path = var.env == "dev" ? "incubator/${local.svc_name}" : (
-      var.env == "stg" ? "test/${local.svc_name}" : "stable/${local.svc_name}"
+    source_path = var.env == "dev" ? "charts/app/incubator/${local.svc_name}" : (
+      var.env == "stg" ? "charts/app/test/${local.svc_name}" : "charts/app/stable/${local.svc_name}"
     )
     project                                = "default"
     destination_server                     = "https://kubernetes.default.svc"

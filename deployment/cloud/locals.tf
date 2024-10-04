@@ -115,35 +115,6 @@ locals {
   }
 
   # Kubernetes Addons
-  ## External DNS Standard
-  external_dns_standard = {
-    Unit    = var.unit
-    Env     = var.env
-    Code    = "helm"
-    Feature = "external-dns"
-  }
-  ## Ingress Nginx Standard
-  ingress_nginx_standard = {
-    Unit    = var.unit
-    Env     = var.env
-    Code    = "helm"
-    Feature = "ingress-nginx"
-  }
-  ## Cert Manager Standard
-  cert_manager_standard = {
-    Unit    = var.unit
-    Env     = var.env
-    Code    = "helm"
-    Feature = "cert-manager"
-  }
-  ## Sonarqube Standard
-  sonarqube_standard = {
-    Unit    = var.unit
-    Env     = var.env
-    Code    = "helm"
-    Feature = "sonarqube"
-  }
-
   ## Argo CD Standard
   argocd_standard = {
     Unit    = var.unit

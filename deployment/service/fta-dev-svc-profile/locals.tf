@@ -14,9 +14,9 @@ locals {
     docker_repository_uri = "greyhats13/${local.svc_name}"
     gitops_repo_name      = data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_name
     repo_gitops_ssh       = data.terraform_remote_state.cloud_deployment.outputs.gitops_repo_ssh_clone_url
-    gitops_path_dev       = "incubator/${local.svc_name}"
-    gitops_path_stg       = "test/${local.svc_name}"
-    gitops_path_prd       = "stable/${local.svc_name}"
+    gitops_path_dev       = "charts/app/incubator/${local.svc_name}"
+    gitops_path_stg       = "charts/app/test/${local.svc_name}"
+    gitops_path_prd       = "charts/app/stable/${local.svc_name}"
   }
   ## Secrets that will be stored in Github repo environment for Github Actions
   secret_map = { for k, v in data.google_kms_secret.secrets : k => v.plaintext }
@@ -27,10 +27,8 @@ locals {
 
   ## Secrets that will be stored in the Secret Manager
   app_secret = {
-    "USERNAME" = "${local.svc_name}_${var.env}"
-    "PASSWORD" = random_password.password.result
-    "DATABASE" = "${local.svc_name}_db_${var.env}"
-    "HOST"     = data.terraform_remote_state.cloud_deployment.outputs.cloudsql_instance_ip_address
-    "PORT"     = "5432"
+    "FIRESTORE_PROJECT_ID" = data.google_project.current.project_id
+    "FIRESTORE_DATABASE"   = data.terraform_remote_state.cloud_deployment.outputs.firestore_name
+    "FIRESTORE_COLLECTION" = local.svc_naming_full
   }
 }

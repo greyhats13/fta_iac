@@ -65,19 +65,3 @@ variable "argocd_vault_plugin_version" {
 variable "iac_secrets_ciphertext" {
   description = "List of secrets ciphertext"
 }
-
-### SonarQube
-variable "sonarqube_jdbc_user" {
-  type        = string
-  description = "SonarQube database user"
-}
-
-variable "sonarqube_jdbc_db" {
-  type        = string
-  description = "SonarQube database name"
-}
-
-variable "sonarqube_jdbc_port" {
-  type        = number
-  description = "SonarQube database port"
-}

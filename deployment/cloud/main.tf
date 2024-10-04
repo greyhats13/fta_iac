@@ -10,9 +10,10 @@ module "gcp_project" {
     gke                = "container.googleapis.com",
     secret_manager     = "secretmanager.googleapis.com",
     kms                = "cloudkms.googleapis.com",
-    sql                = "sqladmin.googleapis.com",
+    # sql                = "sqladmin.googleapis.com",
     service_networking = "servicenetworking.googleapis.com"
     firestore          = "firestore.googleapis.com"
+    certificatemanager = "certificatemanager.googleapis.com"
   }
 }
 
@@ -305,56 +306,56 @@ module "gce_atlantis" {
 }
 
 ## Provisioning the Cloud SQL instance using the Cloud SQL module
-module "cloudsql_instance_main" {
-  source     = "../../modules/gcp/cloudsql"
-  region     = var.region
-  project_id = data.google_project.curent.project_id
-  standard   = local.cloudsql_standard
-  name       = local.cloudsql_naming_standard
-  vpc_id     = module.vpc_main.vpc_id
-  # global_address_purpose = "VPC_PEERING"
-  # global_address_type    = "INTERNAL"
-  # prefix_length          = 16
-  # service_name           = "servicenetworking.googleapis.com"
-  database_version = "POSTGRES_16"
-  settings = {
-    tier                = "db-f1-micro" # Choose an appropriate machine type
-    availability_type   = "ZONAL"       # "ZONAL" or "REGIONAL"
-    disk_type           = "PD_SSD"      # "PD_SSD" or "PD_HDD"
-    disk_size           = 10            # Disk size in GB
-    activation_policy   = "ALWAYS"      # "ALWAYS", "NEVER", "ON_DEMAND"
-    deletion_protection = false         # Set to true to prevent accidental deletion
+# module "cloudsql_instance_main" {
+#   source     = "../../modules/gcp/cloudsql"
+#   region     = var.region
+#   project_id = data.google_project.curent.project_id
+#   standard   = local.cloudsql_standard
+#   name       = local.cloudsql_naming_standard
+#   vpc_id     = module.vpc_main.vpc_id
+#   # global_address_purpose = "VPC_PEERING"
+#   # global_address_type    = "INTERNAL"
+#   # prefix_length          = 16
+#   # service_name           = "servicenetworking.googleapis.com"
+#   database_version = "POSTGRES_16"
+#   settings = {
+#     tier                = "db-f1-micro" # Choose an appropriate machine type
+#     availability_type   = "ZONAL"       # "ZONAL" or "REGIONAL"
+#     disk_type           = "PD_SSD"      # "PD_SSD" or "PD_HDD"
+#     disk_size           = 10            # Disk size in GB
+#     activation_policy   = "ALWAYS"      # "ALWAYS", "NEVER", "ON_DEMAND"
+#     deletion_protection = false         # Set to true to prevent accidental deletion
 
-    backup_configuration = {
-      enabled                        = true
-      start_time                     = "03:00" # Time in UTC
-      location                       = var.region
-      point_in_time_recovery_enabled = true
-    }
+#     backup_configuration = {
+#       enabled                        = true
+#       start_time                     = "03:00" # Time in UTC
+#       location                       = var.region
+#       point_in_time_recovery_enabled = true
+#     }
 
-    maintenance_window = {
-      day          = 7        # 1 (Sunday) to 7 (Saturday)
-      hour         = 3        # 0 to 23
-      update_track = "stable" # "canary" or "stable"
-    }
+#     maintenance_window = {
+#       day          = 7        # 1 (Sunday) to 7 (Saturday)
+#       hour         = 3        # 0 to 23
+#       update_track = "stable" # "canary" or "stable"
+#     }
 
-    ip_configuration = {
-      ipv4_enabled = true
-      # private_network                               = module.vpc_main.vpc_self_link
-      ssl_mode                                      = "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
-      enable_private_path_for_google_cloud_services = false
-      authorized_networks = [
-        {
-          name  = "NAT IP"
-          value = "34.101.198.203/32"
-        }
-      ]
-    }
+#     ip_configuration = {
+#       ipv4_enabled = true
+#       # private_network                               = module.vpc_main.vpc_self_link
+#       ssl_mode                                      = "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
+#       enable_private_path_for_google_cloud_services = false
+#       authorized_networks = [
+#         {
+#           name  = "NAT IP"
+#           value = "34.101.198.203/32"
+#         }
+#       ]
+#     }
 
-    database_flags = [] # Add any database flags if needed
-  }
-  depends_on = [module.gcp_project, module.vpc_main]
-}
+#     database_flags = [] # Add any database flags if needed
+#   }
+#   depends_on = [module.gcp_project, module.vpc_main]
+# }
 
 module "firestore_main" {
   source           = "../../modules/gcp/firestore/db"
@@ -519,44 +520,3 @@ module "argocd" {
     module.gke_main,
   ]
 }
-
-# # Cloud SQL for application database and user
-# # Create application database and user in Cloud SQL
-# module "sql_sonar_jdbc" {
-#   source        = "../../modules/gcp/sql"
-#   region        = var.region
-#   standard      = local.sonarqube_standard
-#   project_id    = data.google_project.curent.project_id
-#   instance_name = module.cloudsql_instance_main.instance_name
-#   database      = var.sonarqube_jdbc_db
-#   username      = var.sonarqube_jdbc_user
-#   password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
-# }
-
-# ## Cert Manager is a Kubernetes addon that automates the management and issuance of TLS certificates from various issuing sources.
-# module "sonarqube" {
-#   source                = "../../modules/cicd/helm"
-#   region                = var.region
-#   standard              = local.sonarqube_standard
-#   repository            = "https://SonarSource.github.io/helm-chart-sonarqube"
-#   chart                 = "sonarqube"
-#   project_id            = data.google_project.curent.project_id
-#   gsa_roles             = ["roles/cloudsql.client"]
-#   values                = ["${file("manifest/${local.sonarqube_standard.Feature}.yaml")}"]
-#   namespace             = "sonarqube"
-#   create_namespace      = true
-#   create_gsa            = true
-#   use_workload_identity = true
-#   dns_name              = trimsuffix(module.dns_main.dns_name, ".")
-#   extra_vars = {
-#     sonarqube_password      = jsondecode(module.gsm_iac.secret_data)["sonarqube_admin_password"]
-#     sonarqube_jdbc_url      = "jdbc:postgresql://${module.cloudsql_instance_main.instance_ip_address}:${var.sonarqube_jdbc_port}/${var.sonarqube_jdbc_db}"
-#     sonarqube_jdbc_host     = module.cloudsql_instance_main.instance_ip_address
-#     sonarqube_jdbc_database = var.sonarqube_jdbc_db
-#     sonarqube_jdbc_username = var.sonarqube_jdbc_user
-#     sonarqube_jdbc_password = jsondecode(module.gsm_iac.secret_data)["sonarqube_jdbc_password"]
-#   }
-#   depends_on = [
-#     module.gke_main
-#   ]
-# }
